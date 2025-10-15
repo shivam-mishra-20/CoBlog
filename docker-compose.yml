@@ -1,0 +1,21 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: coblog-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: coblog
+      POSTGRES_PASSWORD: coblog
+      POSTGRES_DB: coblog
+    ports:
+      - "5432:5432"
+    volumes:
+      - coblog_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "coblog"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  coblog_pg_data:
