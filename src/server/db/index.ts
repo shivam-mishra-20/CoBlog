@@ -8,7 +8,25 @@ if (!process.env.DATABASE_URL) {
 
 // Connection options with sensible defaults and optional SSL
 // Use DB_SSL=1 in .env for providers requiring SSL (e.g. some managed Postgres, Render, Railway with force SSL)
-const useSSL = process.env.DB_SSL === "1";
+const dbUrl = process.env.DATABASE_URL;
+let useSSL = process.env.DB_SSL === "1";
+
+// Auto-detect SSL from query params commonly provided by hosts if DB_SSL is not explicitly set
+try {
+  const u = new URL(dbUrl!);
+  const sslParam = u.searchParams.get("ssl");
+  const sslMode = u.searchParams.get("sslmode");
+  if (!useSSL) {
+    if (sslParam === "true") useSSL = true;
+    if (sslMode && ["require", "prefer", "verify-full", "verify-ca"].includes(sslMode)) useSSL = true;
+  }
+  if (process.env.DB_DEBUG === "1") {
+    const redacted = `${u.protocol}//${u.username ? "***" : ""}${u.username ? ":***@" : ""}${u.host}${u.pathname}`;
+    console.log(`[db] Connecting to ${redacted} ssl=${useSSL ? "require" : "off"}`);
+  }
+} catch {
+  // ignore URL parse issues; rely on explicit env flags
+}
 const connectTimeoutSeconds = Number(process.env.DB_CONNECT_TIMEOUT ?? 10); // seconds
 
 const client = postgres(process.env.DATABASE_URL, {

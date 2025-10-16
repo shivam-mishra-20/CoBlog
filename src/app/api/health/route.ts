@@ -22,8 +22,12 @@ export async function GET() {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const cause = (err as unknown as { cause?: unknown })?.cause;
+    const causeMsg =
+      cause instanceof Error ? cause.message : cause ? String(cause) : undefined;
+    const stack = err instanceof Error ? err.stack : undefined;
     return new Response(
-      JSON.stringify({ ok: false, error: message }),
+      JSON.stringify({ ok: false, error: message, cause: causeMsg, stack }),
       { status: 500, headers: { "content-type": "application/json" } }
     );
   }
