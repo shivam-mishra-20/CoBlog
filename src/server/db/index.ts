@@ -39,3 +39,15 @@ if (process.env.NODE_ENV === "development" && process.env.DB_EAGER_TEST === "1")
     console.error("[db] Connection test failed:", err.message);
   });
 }
+
+// If DB_DEBUG is enabled in the environment (set DB_DEBUG=1 on Vercel),
+// run a quick connection test at startup and log any error to make
+// production connection issues visible in Vercel function logs.
+if (process.env.DB_DEBUG === "1") {
+  client`SELECT 1`.then(() => {
+    console.log("[db] Connection test succeeded (DB_DEBUG=1)");
+  }).catch((err) => {
+    // Print full error for easier debugging in Vercel logs
+    console.error("[db] Connection test failed (DB_DEBUG=1):", err);
+  });
+}
