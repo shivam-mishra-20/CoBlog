@@ -1,5 +1,6 @@
 ﻿import Link from "next/link";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,27 +9,74 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Sparkles, BookOpen, Feather, TrendingUp } from "lucide-react";
+import {
+  Sparkles,
+  BookOpen,
+  Feather,
+  TrendingUp,
+  Zap,
+  Shield,
+  Search,
+  Image as ImageIcon,
+  Eye,
+  BarChart3,
+} from "lucide-react";
 
 export default function HomePage() {
   const features = [
     {
       icon: BookOpen,
-      title: "Rich Content",
+      title: "Rich Text Editor",
       description:
-        "Create beautiful, engaging blog posts with our intuitive editor",
+        "Create beautiful, engaging blog posts with our advanced markdown editor with live preview",
+    },
+    {
+      icon: Search,
+      title: "Powerful Search",
+      description:
+        "Find any post instantly with our fast and intelligent search functionality",
+    },
+    {
+      icon: ImageIcon,
+      title: "Image Upload",
+      description:
+        "Add featured images to your posts with our simple drag-and-drop image upload",
     },
     {
       icon: Feather,
       title: "Elegant Design",
       description:
-        "A luxurious Royal Brown & White design system for a premium experience",
+        "A luxurious Royal Brown & White design system with dark mode support",
     },
     {
-      icon: TrendingUp,
+      icon: BarChart3,
+      title: "Post Statistics",
+      description:
+        "Track word count and reading time for every post automatically",
+    },
+    {
+      icon: Zap,
       title: "Modern Stack",
       description:
         "Built with Next.js 15, tRPC, and PostgreSQL for optimal performance",
+    },
+    {
+      icon: Eye,
+      title: "Post Preview",
+      description:
+        "Preview your posts before publishing to ensure they look perfect",
+    },
+    {
+      icon: Shield,
+      title: "SEO Optimized",
+      description:
+        "Built-in SEO meta tags and structured data for better search rankings",
+    },
+    {
+      icon: TrendingUp,
+      title: "Pagination",
+      description:
+        "Navigate through posts effortlessly with our intuitive pagination system",
     },
   ];
 
@@ -84,20 +132,20 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card
                 key={index}
-                className="group hover:scale-105 transition-transform duration-300 card-luxury"
+                className="group hover:scale-105 transition-all duration-300 card-luxury"
               >
                 <CardHeader>
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-royal-100 to-brown-100 flex items-center justify-center mb-4 group-hover:shadow-royal-lg transition-shadow">
-                    <feature.icon className="h-7 w-7 text-royal-700" />
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-royal-100 to-brown-100 dark:from-royal-800 dark:to-brown-800 flex items-center justify-center mb-4 group-hover:shadow-royal-lg transition-shadow">
+                    <feature.icon className="h-7 w-7 text-royal-700 dark:text-royal-200" />
                   </div>
-                  <CardTitle className="text-2xl">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-base text-royal-600">
+                  <CardDescription className="text-sm leading-relaxed">
                     {feature.description}
                   </CardDescription>
                 </CardContent>
@@ -133,21 +181,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-royal-950 text-royal-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <span className="text-2xl font-serif font-bold text-gradient-royal bg-gradient-to-r from-royal-300 to-brown-300 bg-clip-text text-transparent">
-                CoBlog
-              </span>
-              <p className="text-royal-400 mt-2">Luxury Blogging Platform</p>
-            </div>
-            <div className="text-royal-400">
-              <p>&copy; 2025 CoBlog. All rights reserved.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

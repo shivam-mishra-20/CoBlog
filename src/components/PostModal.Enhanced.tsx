@@ -6,6 +6,7 @@ import { getOrCreateUserId } from "@/lib/user-identity";
 import { usePostStore } from "@/lib/store/post-store";
 import { toast } from "sonner";
 import { X, Eye, Edit, Upload } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { useDropzone } from "react-dropzone";
 import {
   calculatePostStats,
@@ -13,19 +14,6 @@ import {
   formatWordCount,
 } from "@/lib/utils/post-stats";
 import Image from "next/image";
-import { LexicalEditor, LexicalReadOnly } from "@/components/lexical";
-import {
-  lexicalToPlainText,
-  plainTextToLexical,
-  isLexicalJSON,
-  getLexicalWordCount,
-} from "@/lib/utils/lexical-utils";
-import {
-  uploadImage,
-  deleteImage,
-  isFirebaseStorageUrl,
-  validateImageFile,
-} from "@/lib/firebase";
 
 interface PostModalProps {
   postId: number | null;
@@ -35,7 +23,6 @@ interface PostModalProps {
 export default function PostModal({ postId, onClose }: PostModalProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const touchYRef = useRef<number | null>(null);
-  const contentRef = useRef<string>("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
@@ -43,7 +30,6 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [featuredImage, setFeaturedImage] = useState<string>("");
   const [isPreview, setIsPreview] = useState(false);
-  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { setCreating, setUpdating } = usePostStore();
   const userId = getOrCreateUserId();
@@ -56,19 +42,8 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
 
   const utils = trpc.useUtils();
 
-  // Calculate post statistics - handle both Lexical JSON and plain text
-  const getContentStats = () => {
-    if (isLexicalJSON(content)) {
-      const wordCount = getLexicalWordCount(content);
-      const plainText = lexicalToPlainText(content);
-      const charCount = plainText.length;
-      const readingTimeMinutes = Math.ceil(wordCount / 200);
-      return { wordCount, charCount, readingTimeMinutes };
-    }
-    return calculatePostStats(content);
-  };
-
-  const stats = getContentStats();
+  // Calculate post statistics
+  const stats = calculatePostStats(content);
 
   const createMutation = trpc.post.create.useMutation({
     onMutate: () => {
@@ -114,61 +89,35 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
   useEffect(() => {
     if (existingPost) {
       setTitle(existingPost.title);
-      // Convert legacy markdown to Lexical if needed
-      const existingContent = existingPost.content;
-      if (!isLexicalJSON(existingContent)) {
-        // Legacy markdown content - convert to Lexical
-        const lexicalContent = plainTextToLexical(existingContent);
-        setContent(lexicalContent);
-        contentRef.current = lexicalContent;
-      } else {
-        setContent(existingContent);
-        contentRef.current = existingContent;
-      }
+      setContent(existingPost.content);
       setExcerpt(existingPost.excerpt || "");
       setPublished(existingPost.published);
       setFeaturedImage(existingPost.featuredImage || "");
       setSelectedCategories(existingPost.categories?.map((c) => c.id) || []);
-      // Reset preview mode when loading existing post
-      setIsPreview(false);
     }
   }, [existingPost]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
-    if (!title.trim()) {
-      toast.error("Please enter a title");
-      return;
-    }
-
-    // Use the latest content from ref
-    const finalContent = contentRef.current || content;
-
-    if (!finalContent.trim()) {
-      toast.error("Please enter some content");
-      return;
-    }
-
     try {
       if (postId) {
         await updateMutation.mutateAsync({
           id: postId,
           ownerId: userId,
-          title: title.trim(),
-          content: finalContent,
-          excerpt: excerpt.trim() || undefined,
-          featuredImage: featuredImage || undefined, // Optional
+          title,
+          content,
+          excerpt: excerpt || undefined,
+          featuredImage: featuredImage || undefined,
           published,
           categoryIds: selectedCategories,
         });
       } else {
         await createMutation.mutateAsync({
-          title: title.trim(),
-          content: finalContent,
-          excerpt: excerpt.trim() || undefined,
-          featuredImage: featuredImage || undefined, // Optional
+          title,
+          content,
+          excerpt: excerpt || undefined,
+          featuredImage: featuredImage || undefined,
           published,
           categoryIds: selectedCategories,
           ownerId: userId,
@@ -187,46 +136,19 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
     );
   };
 
-  // Image upload handler with Firebase Storage
-  const onDrop = useCallback(
-    async (acceptedFiles: File[]) => {
-      const file = acceptedFiles[0];
-      if (!file) return;
-
-      // Validate file
-      const validationError = validateImageFile(file);
-      if (validationError) {
-        toast.error(validationError);
-        return;
-      }
-
-      try {
-        setIsUploadingImage(true);
-        toast.loading("Uploading image...", { id: "upload-image" });
-
-        // Delete old image if it exists and is from Firebase
-        if (featuredImage && isFirebaseStorageUrl(featuredImage)) {
-          await deleteImage(featuredImage).catch(() => {
-            // Ignore deletion errors
-          });
-        }
-
-        // Upload to Firebase Storage
-        const downloadURL = await uploadImage(file, "blog-images");
-        setFeaturedImage(downloadURL);
-
-        toast.success("Image uploaded successfully!", { id: "upload-image" });
-      } catch (error) {
-        console.error("Image upload error:", error);
-        toast.error("Failed to upload image. Please try again.", {
-          id: "upload-image",
-        });
-      } finally {
-        setIsUploadingImage(false);
-      }
-    },
-    [featuredImage]
-  );
+  // Image upload handler
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFeaturedImage(reader.result as string);
+        toast.success("Image uploaded successfully!");
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -265,7 +187,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
 
       {/* Modal Container */}
       <div
-        className="relative w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col bg-card rounded-2xl shadow-royal-2xl border border-border animate-slide-up bg-white border-royal-300"
+        className="relative w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col bg-card rounded-2xl shadow-royal-2xl border border-border animate-slide-up"
         data-lenis-prevent
       >
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
@@ -423,15 +345,9 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                   </div>
                 )}
 
-                {/* Content - Preview with Lexical Read-Only */}
+                {/* Content */}
                 <div className="prose prose-lg dark:prose-invert max-w-none">
-                  {content ? (
-                    <LexicalReadOnly content={content} />
-                  ) : (
-                    <p className="text-muted-foreground italic">
-                      *No content yet*
-                    </p>
-                  )}
+                  <ReactMarkdown>{content || "*No content yet*"}</ReactMarkdown>
                 </div>
               </div>
             ) : (
@@ -440,27 +356,18 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                 {/* Image Upload */}
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Featured Image (Optional)
+                    Featured Image
                   </label>
                   <div
                     {...getRootProps()}
                     className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                      isUploadingImage
-                        ? "opacity-50 cursor-not-allowed"
-                        : isDragActive
+                      isDragActive
                         ? "border-primary bg-primary/10"
                         : "border-border hover:border-primary/50 bg-muted/50"
                     }`}
                   >
-                    <input {...getInputProps()} disabled={isUploadingImage} />
-                    {isUploadingImage ? (
-                      <div className="space-y-2">
-                        <div className="animate-spin mx-auto h-10 w-10 border-4 border-primary border-t-transparent rounded-full" />
-                        <p className="text-sm text-muted-foreground">
-                          Uploading to Firebase Storage...
-                        </p>
-                      </div>
-                    ) : featuredImage ? (
+                    <input {...getInputProps()} />
+                    {featuredImage ? (
                       <div className="space-y-3">
                         <div className="relative w-full h-48 rounded-lg overflow-hidden">
                           <Image
@@ -483,7 +390,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                             : "Click or drag image to upload"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          PNG, JPG, GIF, WebP up to 5MB
+                          PNG, JPG, GIF up to 5MB
                         </p>
                       </div>
                     )}
@@ -519,23 +426,21 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                   />
                 </div>
 
-                {/* Content - Lexical Rich Text Editor */}
+                {/* Content */}
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    Content * (Rich Text Editor)
+                    Content * (Markdown supported)
                   </label>
-                  <LexicalEditor
+                  <textarea
+                    required
                     value={content}
-                    onChange={(newContent) => {
-                      contentRef.current = newContent;
-                      setContent(newContent);
-                    }}
-                    placeholder="Start writing your post..."
-                    minHeight="400px"
+                    onChange={(e) => setContent(e.target.value)}
+                    rows={12}
+                    className="w-full px-4 py-3 border-2 border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all font-mono text-sm resize-none bg-background"
+                    placeholder="Write your post content in Markdown..."
                   />
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Tip: Use the toolbar for formatting, or markdown shortcuts
-                    like **bold**, *italic*, # headings
+                    Tip: Use **bold**, *italic*, # headings, - lists, and more
                   </p>
                 </div>
 
@@ -550,10 +455,10 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                         key={category.id}
                         type="button"
                         onClick={() => toggleCategory(category.id)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border-royal-200 border-1 transform hover:scale-105 ${
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${
                           selectedCategories.includes(category.id)
-                            ? "bg-royal-900 text-white shadow-md"
-                            : "bg-gray-300 text-primary-foreground hover:bg-secondary/80"
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                         }`}
                       >
                         {category.name}
@@ -594,7 +499,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="w-full text-white bg-royal-900 sm:w-auto inline-flex justify-center items-center rounded-lg border border-transparent shadow-md px-4 py-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border border-transparent shadow-md px-4 py-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createMutation.isPending || updateMutation.isPending
                 ? "Saving..."

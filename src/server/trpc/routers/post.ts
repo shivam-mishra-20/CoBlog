@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { posts, postsToCategories, categories } from "../../db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, or, ilike } from "drizzle-orm";
 import { generateUniqueSlug } from "../../utils/slugify";
 import { TRPCError } from "@trpc/server";
 
@@ -10,6 +10,7 @@ const createPostSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
   content: z.string().min(1, "Content is required"),
   excerpt: z.string().optional(),
+  featuredImage: z.string().optional(),
   published: z.boolean().default(false),
   categoryIds: z.array(z.number()).optional().default([]),
   ownerId: z.string().uuid("Invalid owner ID format"),
@@ -21,21 +22,28 @@ const updatePostSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   content: z.string().min(1).optional(),
   excerpt: z.string().optional(),
+  featuredImage: z.string().optional(),
   published: z.boolean().optional(),
   categoryIds: z.array(z.number()).optional(),
 });
 
 export const postRouter = createTRPCRouter({
-  // Get all posts with optional category filter
+  // Get all posts with optional category filter, search, and pagination
   getAll: publicProcedure
     .input(
       z.object({
         categoryId: z.number().optional(),
         published: z.boolean().optional(),
+        search: z.string().optional(),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(12),
       }).optional()
     )
     .query(async ({ ctx, input }) => {
       const { db } = ctx;
+      const page = input?.page ?? 1;
+      const limit = input?.limit ?? 12;
+      const offset = (page - 1) * limit;
       
       // Build the query based on filters
       let query = db
@@ -45,6 +53,7 @@ export const postRouter = createTRPCRouter({
           slug: posts.slug,
           content: posts.content,
           excerpt: posts.excerpt,
+          featuredImage: posts.featuredImage,
           published: posts.published,
           createdAt: posts.createdAt,
           updatedAt: posts.updatedAt,
@@ -58,12 +67,33 @@ export const postRouter = createTRPCRouter({
         conditions.push(eq(posts.published, input.published));
       }
 
+      // Add search filter
+      if (input?.search) {
+        const searchTerm = `%${input.search}%`;
+        conditions.push(
+          or(
+            ilike(posts.title, searchTerm),
+            ilike(posts.content, searchTerm),
+            ilike(posts.excerpt ?? "", searchTerm)
+          )!
+        );
+      }
+
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
       }
 
-      // Execute query and get posts
-      let allPosts = await query.orderBy(desc(posts.createdAt));
+      // Get total count for pagination
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(posts)
+        .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+      // Execute query and get posts with pagination
+      let allPosts = await query
+        .orderBy(desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
 
       // If category filter is provided, filter posts
       if (input?.categoryId) {
@@ -99,7 +129,15 @@ export const postRouter = createTRPCRouter({
         })
       );
 
-      return postsWithCategories;
+      return {
+        posts: postsWithCategories,
+        pagination: {
+          page,
+          limit,
+          total: count,
+          totalPages: Math.ceil(count / limit),
+        },
+      };
     }),
 
   // Get a single post by ID or slug
@@ -201,6 +239,7 @@ export const postRouter = createTRPCRouter({
           slug,
           content: input.content,
           excerpt: input.excerpt,
+          featuredImage: input.featuredImage,
           published: input.published,
           ownerId: input.ownerId,
           updatedAt: new Date(),
@@ -345,6 +384,7 @@ export const postRouter = createTRPCRouter({
           slug: posts.slug,
           content: posts.content,
           excerpt: posts.excerpt,
+          featuredImage: posts.featuredImage,
           published: posts.published,
           ownerId: posts.ownerId,
           createdAt: posts.createdAt,

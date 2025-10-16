@@ -2,6 +2,7 @@
 
 import { trpc } from "@/lib/trpc/client";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { useState } from "react";
 import CategoryModal from "@/components/CategoryModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -202,6 +203,8 @@ export default function CategoriesPage() {
         type="danger"
         isLoading={deleteMutation.isPending}
       />
+
+      <Footer />
     </div>
   );
 }

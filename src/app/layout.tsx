@@ -4,6 +4,7 @@ import "./globals.css";
 import { TRPCProvider } from "@/lib/trpc/client";
 import LenisProvider from "@/components/LenisProvider";
 import { ToastProvider } from "@/components/ToastProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,8 +22,28 @@ export const metadata: Metadata = {
   title: "CoBlog - Collaborative Blogging Platform",
   description:
     "A collaborative blogging platform with Royal Brown & White design system. Built with Next.js 15, tRPC, and PostgreSQL",
+  keywords: [
+    "blog",
+    "blogging platform",
+    "Next.js",
+    "tRPC",
+    "PostgreSQL",
+    "content management",
+  ],
+  authors: [{ name: "CoBlog Team" }],
+  openGraph: {
+    title: "CoBlog - Collaborative Blogging Platform",
+    description:
+      "A collaborative blogging platform with Royal Brown & White design system",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CoBlog - Collaborative Blogging Platform",
+    description:
+      "A collaborative blogging platform with Royal Brown & White design system",
+  },
   icons: {
-    // provide an object with explicit size to increase icon size (e.g. 512x512)
     icon: [
       {
         url: "/coblog-logo.png",
@@ -39,14 +60,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="lenis">
+    <html lang="en" className="lenis" suppressHydrationWarning>
       <body className={`${inter.variable} ${playfair.variable} antialiased`}>
-        <LenisProvider>
-          <TRPCProvider>
-            {children}
-            <ToastProvider />
-          </TRPCProvider>
-        </LenisProvider>
+        <ThemeProvider>
+          <LenisProvider>
+            <TRPCProvider>
+              {children}
+              <ToastProvider />
+            </TRPCProvider>
+          </LenisProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

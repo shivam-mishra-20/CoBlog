@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -67,10 +68,12 @@ export default function Navigation() {
                 )}
               </Link>
             ))}
+            <ThemeToggle />
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
+          <div className="flex items-center md:hidden gap-2">
+            <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-lg text-royal-700 hover:text-royal-900 hover:bg-royal-100 transition-all"

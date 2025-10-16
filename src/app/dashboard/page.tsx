@@ -2,6 +2,7 @@
 
 import { trpc } from "@/lib/trpc/client";
 import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import PostModal from "@/components/PostModal";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, BookOpen, LayoutDashboard } from "lucide-react";
 import { getOrCreateUserId } from "@/lib/user-identity";
 import Link from "next/link";
+import Image from "next/image";
 import { usePostStore } from "@/lib/store/post-store";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+//import Image from "next/image";
 
 export default function DashboardPage() {
   const [userId, setUserId] = useState<string>("");
@@ -164,6 +167,18 @@ export default function DashboardPage() {
                 className="card-luxury hover:scale-105 transition-all duration-300 hover:shadow-royal-xl"
               >
                 <CardContent className="p-6 space-y-4">
+                  {/* Featured Image */}
+                  {post.featuredImage && (
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden mb-4">
+                      <Image
+                        src={post.featuredImage}
+                        alt={post.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-start mb-2">
                     <Badge
                       variant={post.published ? "default" : "secondary"}
@@ -272,6 +287,8 @@ export default function DashboardPage() {
         type="danger"
         isLoading={deleteMutation.isPending}
       />
+
+      <Footer />
     </div>
   );
 }

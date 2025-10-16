@@ -15,6 +15,7 @@ export const posts = pgTable("posts", {
   slug: text("slug").notNull().unique(),
   content: text("content").notNull(),
   excerpt: text("excerpt"),
+  featuredImage: text("featured_image"), // URL or base64 string for featured image
   published: boolean("published").notNull().default(false),
   ownerId: text("owner_id").notNull(), // UUID stored in localStorage
   createdAt: timestamp("created_at").notNull().defaultNow(),
