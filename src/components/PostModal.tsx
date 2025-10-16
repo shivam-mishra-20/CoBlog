@@ -1,7 +1,11 @@
 "use client";
 
 import { trpc } from "@/lib/trpc/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { getOrCreateUserId } from "@/lib/user-identity";
+import { usePostStore } from "@/lib/store/post-store";
+import { toast } from "sonner";
+import { X } from "lucide-react";
 
 interface PostModalProps {
   postId: number | null;
@@ -9,11 +13,16 @@ interface PostModalProps {
 }
 
 export default function PostModal({ postId, onClose }: PostModalProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const touchYRef = useRef<number | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [published, setPublished] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+
+  const { setCreating, setUpdating } = usePostStore();
+  const userId = getOrCreateUserId();
 
   const { data: categories } = trpc.category.getAll.useQuery();
   const { data: existingPost } = trpc.post.getById.useQuery(
@@ -21,8 +30,48 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
     { enabled: !!postId }
   );
 
-  const createMutation = trpc.post.create.useMutation();
-  const updateMutation = trpc.post.update.useMutation();
+  const utils = trpc.useUtils();
+
+  const createMutation = trpc.post.create.useMutation({
+    onMutate: () => {
+      setCreating(true);
+      toast.loading("Creating post...", { id: "create-post" });
+    },
+    onSuccess: () => {
+      setCreating(false);
+      toast.success("Post created successfully!", { id: "create-post" });
+      utils.post.getByOwner.invalidate({ ownerId: userId });
+      utils.post.getAll.invalidate();
+      onClose();
+    },
+    onError: (err) => {
+      setCreating(false);
+      toast.error(err.message || "Failed to create post", {
+        id: "create-post",
+      });
+    },
+  });
+
+  const updateMutation = trpc.post.update.useMutation({
+    onMutate: () => {
+      setUpdating(true);
+      toast.loading("Updating post...", { id: "update-post" });
+    },
+    onSuccess: () => {
+      setUpdating(false);
+      toast.success("Post updated successfully!", { id: "update-post" });
+      utils.post.getByOwner.invalidate({ ownerId: userId });
+      utils.post.getAll.invalidate();
+      utils.post.getById.invalidate({ id: postId! });
+      onClose();
+    },
+    onError: (err) => {
+      setUpdating(false);
+      toast.error(err.message || "Failed to update post", {
+        id: "update-post",
+      });
+    },
+  });
 
   useEffect(() => {
     if (existingPost) {
@@ -41,6 +90,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
       if (postId) {
         await updateMutation.mutateAsync({
           id: postId,
+          ownerId: userId,
           title,
           content,
           excerpt: excerpt || undefined,
@@ -54,11 +104,11 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
           excerpt: excerpt || undefined,
           published,
           categoryIds: selectedCategories,
+          ownerId: userId,
         });
       }
-      onClose();
-    } catch (error) {
-      console.error("Error saving post:", error);
+    } catch (err) {
+      console.error("Error saving post:", err);
     }
   };
 
@@ -71,145 +121,195 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div
-          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-          onClick={onClose}
-        ></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-royal-900/50 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-          <form onSubmit={handleSubmit}>
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {postId ? "Edit Post" : "Create New Post"}
-                </h3>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter post title"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Excerpt
-                  </label>
-                  <textarea
-                    value={excerpt}
-                    onChange={(e) => setExcerpt(e.target.value)}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Brief description (optional)"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Content * (Markdown supported)
-                  </label>
-                  <textarea
-                    required
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    rows={12}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                    placeholder="Write your post content in Markdown..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categories
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {categories?.map((category) => (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => toggleCategory(category.id)}
-                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                          selectedCategories.includes(category.id)
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        }`}
-                      >
-                        {category.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="published"
-                    checked={published}
-                    onChange={(e) => setPublished(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="published"
-                    className="ml-2 block text-sm text-gray-900"
-                  >
-                    Publish immediately
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
-              <button
-                type="submit"
-                disabled={createMutation.isPending || updateMutation.isPending}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
-              >
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : postId
-                  ? "Update Post"
-                  : "Create Post"}
-              </button>
+      {/* Modal Container*/}
+      <div
+        className="relative w-full max-w-4xl h-[90vh] sm:h-[85vh] flex flex-col bg-white rounded-2xl shadow-royal-2xl border border-royal-200 animate-slide-up"
+        data-lenis-prevent
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          {/* Header*/}
+          <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-b border-royal-200">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl sm:text-2xl font-serif font-bold text-royal-900 truncate">
+                {postId ? "Edit Post" : "Create New Post"}
+              </h3>
               <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
+                className="text-royal-400 hover:text-royal-600 transition-colors rounded-full hover:bg-royal-100 p-2 ml-2"
               >
-                Cancel
+                <X className="h-5 w-5" />
               </button>
             </div>
-          </form>
-        </div>
+          </div>
+
+          {/* Scrollable Content Area (visible slim scrollbar + wheel/touch pan) */}
+          <div
+            ref={scrollRef}
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-2 sm:py-3 pr-2 sm:pr-3 modal-scroll [touch-action:pan-y]"
+            data-lenis-prevent
+            onWheelCapture={(e) => {
+              e.stopPropagation();
+              // Force scroll within the modal body even if a global smoother is active
+              if (scrollRef.current) {
+                scrollRef.current.scrollTop += e.deltaY;
+                // Only call preventDefault when the event is cancelable (not passive)
+                if (e.cancelable) e.preventDefault();
+              }
+            }}
+            onTouchStartCapture={(e) => {
+              touchYRef.current = e.touches?.[0]?.clientY ?? null;
+            }}
+            onTouchMoveCapture={(e) => {
+              e.stopPropagation();
+              const currentY = e.touches?.[0]?.clientY;
+              if (scrollRef.current && typeof currentY === "number") {
+                const prevY = touchYRef.current ?? currentY;
+                const dy = prevY - currentY;
+                scrollRef.current.scrollTop += dy;
+                touchYRef.current = currentY;
+                // Only call preventDefault when the event is cancelable (not passive)
+                if (e.cancelable) e.preventDefault();
+              }
+            }}
+            onTouchEndCapture={() => {
+              touchYRef.current = null;
+            }}
+          >
+            {/* Slim scrollbar styling (Firefox + WebKit) */}
+            <style jsx global>{`
+              .modal-scroll {
+                scrollbar-width: thin; /* Firefox */
+                scrollbar-color: rgba(17, 24, 39, 0.35) transparent; /* thumb, track */
+                -webkit-overflow-scrolling: touch; /* iOS momentum */
+              }
+              .modal-scroll::-webkit-scrollbar {
+                width: 8px;
+              }
+              .modal-scroll::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .modal-scroll::-webkit-scrollbar-thumb {
+                background-color: rgba(17, 24, 39, 0.35); /* neutral-900/35 */
+                border-radius: 9999px;
+                border: 2px solid transparent; /* creates padding */
+                background-clip: padding-box;
+              }
+              .modal-scroll:hover::-webkit-scrollbar-thumb {
+                background-color: rgba(17, 24, 39, 0.5);
+              }
+            `}</style>
+            <div className="space-y-2 sm:space-y-3">
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-royal-900 mb-1 sm:mb-2">
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-royal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-royal-500 focus:border-transparent transition-all text-royal-900 text-sm sm:text-base"
+                  placeholder="Enter an engaging post title"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-royal-900 mb-1 sm:mb-2">
+                  Excerpt
+                </label>
+                <textarea
+                  value={excerpt}
+                  onChange={(e) => setExcerpt(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-royal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-royal-500 focus:border-transparent transition-all text-royal-900 resize-none text-sm sm:text-base"
+                  placeholder="Brief description (optional)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-royal-900 mb-1 sm:mb-2">
+                  Content * (Markdown supported)
+                </label>
+                <textarea
+                  required
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={6}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-royal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-royal-500 focus:border-transparent transition-all font-mono text-xs sm:text-sm text-royal-900 resize-none"
+                  placeholder="Write your post content in Markdown..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-royal-900 mb-1.5">
+                  Categories
+                </label>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
+                  {categories?.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => toggleCategory(category.id)}
+                      className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium transition-all transform hover:scale-105 ${
+                        selectedCategories.includes(category.id)
+                          ? "bg-gradient-royal text-white shadow-royal"
+                          : "bg-royal-100 text-royal-700 hover:bg-royal-200"
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center bg-royal-50 rounded-lg p-2 sm:p-3 border border-royal-200">
+                <input
+                  type="checkbox"
+                  id="published"
+                  checked={published}
+                  onChange={(e) => setPublished(e.target.checked)}
+                  className="h-4 w-4 text-royal-600 focus:ring-royal-500 border-royal-300 rounded"
+                />
+                <label
+                  htmlFor="published"
+                  className="ml-2 block text-xs font-medium text-royal-900"
+                >
+                  Publish immediately
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer*/}
+          <div className="flex-shrink-0 bg-gradient-to-r from-royal-50 to-brown-50 px-4 sm:px-6 py-2 sm:py-3 border-t border-royal-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 rounded-b-2xl">
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border-2 border-royal-300 shadow-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-white text-xs font-semibold text-royal-700 hover:bg-royal-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-royal-500 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={createMutation.isPending || updateMutation.isPending}
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border border-transparent shadow-royal px-3 sm:px-4 py-1.5 sm:py-2 bg-royal-900 text-xs font-semibold text-white hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-royal-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {createMutation.isPending || updateMutation.isPending
+                ? "Saving..."
+                : postId
+                ? "Update Post"
+                : "Create Post"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

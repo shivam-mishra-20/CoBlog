@@ -12,10 +12,12 @@ const createPostSchema = z.object({
   excerpt: z.string().optional(),
   published: z.boolean().default(false),
   categoryIds: z.array(z.number()).optional().default([]),
+  ownerId: z.string().uuid("Invalid owner ID format"),
 });
 
 const updatePostSchema = z.object({
   id: z.number(),
+  ownerId: z.string().uuid("Invalid owner ID format"),
   title: z.string().min(1).max(200).optional(),
   content: z.string().min(1).optional(),
   excerpt: z.string().optional(),
@@ -191,7 +193,7 @@ export const postRouter = createTRPCRouter({
       const existingSlugs = existingPosts.map((p) => p.slug);
       const slug = generateUniqueSlug(input.title, existingSlugs);
 
-      // Create the post
+      // Create the post with ownerId
       const [newPost] = await db
         .insert(posts)
         .values({
@@ -200,6 +202,7 @@ export const postRouter = createTRPCRouter({
           content: input.content,
           excerpt: input.excerpt,
           published: input.published,
+          ownerId: input.ownerId,
           updatedAt: new Date(),
         })
         .returning();
@@ -222,7 +225,7 @@ export const postRouter = createTRPCRouter({
     .input(updatePostSchema)
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
-      const { id, categoryIds, ...updateData } = input;
+      const { id, ownerId, categoryIds, ...updateData } = input;
 
       // Check if post exists
       const [existingPost] = await db
@@ -235,6 +238,14 @@ export const postRouter = createTRPCRouter({
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Post not found",
+        });
+      }
+
+      // Verify ownership
+      if (existingPost.ownerId !== ownerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to edit this post. Only the post owner can make changes.",
         });
       }
 
@@ -283,7 +294,10 @@ export const postRouter = createTRPCRouter({
 
   // Delete a post
   delete: publicProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ 
+      id: z.number(),
+      ownerId: z.string().uuid("Invalid owner ID format"),
+    }))
     .mutation(async ({ ctx, input }) => {
       const { db } = ctx;
 
@@ -301,9 +315,68 @@ export const postRouter = createTRPCRouter({
         });
       }
 
+      // Verify ownership
+      if (existingPost.ownerId !== input.ownerId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have permission to delete this post. Only the post owner can delete it.",
+        });
+      }
+
       // Delete the post (cascade will handle postsToCategories)
       await db.delete(posts).where(eq(posts.id, input.id));
 
       return { success: true, message: "Post deleted successfully" };
+    }),
+
+  // Get posts by owner (for "My Posts" view)
+  getByOwner: publicProcedure
+    .input(z.object({ 
+      ownerId: z.string().uuid("Invalid owner ID format"),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { db } = ctx;
+      
+      // Get all posts by this owner
+      const ownerPosts = await db
+        .select({
+          id: posts.id,
+          title: posts.title,
+          slug: posts.slug,
+          content: posts.content,
+          excerpt: posts.excerpt,
+          published: posts.published,
+          ownerId: posts.ownerId,
+          createdAt: posts.createdAt,
+          updatedAt: posts.updatedAt,
+        })
+        .from(posts)
+        .where(eq(posts.ownerId, input.ownerId))
+        .orderBy(desc(posts.createdAt));
+
+      // Fetch categories for each post
+      const postsWithCategories = await Promise.all(
+        ownerPosts.map(async (post) => {
+          const postCategories = await db
+            .select({
+              id: categories.id,
+              name: categories.name,
+              slug: categories.slug,
+            })
+            .from(categories)
+            .innerJoin(
+              postsToCategories,
+              eq(categories.id, postsToCategories.categoryId)
+            )
+            .where(eq(postsToCategories.postId, post.id));
+
+          return {
+            ...post,
+            categories: postCategories,
+          };
+        })
+      );
+
+      return postsWithCategories;
     }),
 });

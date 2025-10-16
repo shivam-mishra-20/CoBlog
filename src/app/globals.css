@@ -1,3 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-royal-200;
+  }
+  
+  body {
+    @apply bg-gradient-royal text-royal-950 font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-royal-900;
+  }
+}
+
+@layer components {
+  /* Royal Button Styles */
+  .btn-royal {
+    @apply px-6 py-3 bg-royal-700 text-white font-medium rounded-lg shadow-royal hover:bg-royal-800 hover:shadow-royal-lg transition-all duration-300 ease-in-out transform hover:-translate-y-0.5;
+  }
+  
+  .btn-royal-outline {
+    @apply px-6 py-3 border-2 border-royal-700 text-royal-700 font-medium rounded-lg hover:bg-royal-700 hover:text-white transition-all duration-300 ease-in-out;
+  }
+  
+  .btn-brown {
+    @apply px-6 py-3 bg-brown-700 text-white font-medium rounded-lg shadow-royal hover:bg-brown-800 hover:shadow-royal-lg transition-all duration-300 ease-in-out transform hover:-translate-y-0.5;
+  }
+  
+  /* Card Styles */
+  .card-royal {
+    @apply bg-white border border-royal-200 rounded-xl shadow-royal hover:shadow-royal-lg transition-all duration-300 ease-in-out;
+  }
+  
+  .card-luxury {
+    @apply bg-gradient-to-br from-white to-royal-50 border border-royal-200 rounded-xl shadow-royal-lg backdrop-blur-sm;
+  }
+  
+  /* Input Styles */
+  .input-royal {
+    @apply w-full px-4 py-3 bg-white border border-royal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-royal-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  /* Badge Styles */
+  .badge-royal {
+    @apply inline-flex items-center px-3 py-1 text-sm font-medium bg-royal-100 text-royal-800 rounded-full;
+  }
+  
+  .badge-brown {
+    @apply inline-flex items-center px-3 py-1 text-sm font-medium bg-brown-100 text-brown-800 rounded-full;
+  }
+}
+
+@layer utilities {
+  .text-gradient-royal {
+    @apply bg-gradient-to-r from-royal-700 via-brown-700 to-royal-800 bg-clip-text text-transparent;
+  }
+  
+  .border-gradient-royal {
+    border-image: linear-gradient(135deg, #8b6f4f, #6d5842) 1;
+  }
+  
+  /* Smooth scroll */
+  html.lenis {
+    height: auto;
+  }
+  
+  .lenis.lenis-smooth {
+    scroll-behavior: auto;
+  }
+  
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+  
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+  
+  .lenis.lenis-scrolling iframe {
+    pointer-events: none;
+  }
+}
