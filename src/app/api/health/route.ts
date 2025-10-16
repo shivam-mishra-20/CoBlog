@@ -8,6 +8,10 @@ export async function GET() {
   try {
     // Light-weight health query
     await db.execute(sql`SELECT 1 AS up`);
+    let dbHost: string | undefined;
+    try {
+      if (process.env.DATABASE_URL) dbHost = new URL(process.env.DATABASE_URL).host;
+    } catch {}
     return new Response(
       JSON.stringify({
         ok: true,
@@ -16,6 +20,7 @@ export async function GET() {
           vercel: Boolean(process.env.VERCEL),
           nodeEnv: process.env.NODE_ENV,
           dbSsl: process.env.DB_SSL === "1",
+          dbHost,
         },
       }),
       { status: 200, headers: { "content-type": "application/json" } }
@@ -26,8 +31,12 @@ export async function GET() {
     const causeMsg =
       cause instanceof Error ? cause.message : cause ? String(cause) : undefined;
     const stack = err instanceof Error ? err.stack : undefined;
+    let dbHost: string | undefined;
+    try {
+      if (process.env.DATABASE_URL) dbHost = new URL(process.env.DATABASE_URL).host;
+    } catch {}
     return new Response(
-      JSON.stringify({ ok: false, error: message, cause: causeMsg, stack }),
+      JSON.stringify({ ok: false, error: message, cause: causeMsg, stack, env: { dbHost } }),
       { status: 500, headers: { "content-type": "application/json" } }
     );
   }
