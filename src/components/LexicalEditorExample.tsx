@@ -22,10 +22,9 @@ export default function LexicalEditorExample() {
   };
 
   const handleSave = () => {
-    // In a real application, you would save this to your database
+    // Save handler (example)
     console.log("Saving content:", editorContent);
 
-    // You can also extract plain text if needed
     const plainText = lexicalToPlainText(editorContent);
     console.log("Plain text version:", plainText);
 

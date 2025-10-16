@@ -56,7 +56,6 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
 
   const utils = trpc.useUtils();
 
-  // Calculate post statistics - handle both Lexical JSON and plain text
   const getContentStats = () => {
     if (isLexicalJSON(content)) {
       const wordCount = getLexicalWordCount(content);
@@ -114,10 +113,8 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
   useEffect(() => {
     if (existingPost) {
       setTitle(existingPost.title);
-      // Convert legacy markdown to Lexical if needed
       const existingContent = existingPost.content;
       if (!isLexicalJSON(existingContent)) {
-        // Legacy markdown content - convert to Lexical
         const lexicalContent = plainTextToLexical(existingContent);
         setContent(lexicalContent);
         contentRef.current = lexicalContent;
@@ -129,7 +126,6 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
       setPublished(existingPost.published);
       setFeaturedImage(existingPost.featuredImage || "");
       setSelectedCategories(existingPost.categories?.map((c) => c.id) || []);
-      // Reset preview mode when loading existing post
       setIsPreview(false);
     }
   }, [existingPost]);
@@ -137,13 +133,11 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate required fields
     if (!title.trim()) {
       toast.error("Please enter a title");
       return;
     }
 
-    // Use the latest content from ref
     const finalContent = contentRef.current || content;
 
     if (!finalContent.trim()) {
@@ -159,7 +153,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
           title: title.trim(),
           content: finalContent,
           excerpt: excerpt.trim() || undefined,
-          featuredImage: featuredImage || undefined, // Optional
+          featuredImage: featuredImage || undefined,
           published,
           categoryIds: selectedCategories,
         });
@@ -168,7 +162,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
           title: title.trim(),
           content: finalContent,
           excerpt: excerpt.trim() || undefined,
-          featuredImage: featuredImage || undefined, // Optional
+          featuredImage: featuredImage || undefined,
           published,
           categoryIds: selectedCategories,
           ownerId: userId,
@@ -187,13 +181,10 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
     );
   };
 
-  // Image upload handler with Firebase Storage
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       const file = acceptedFiles[0];
       if (!file) return;
-
-      // Validate file
       const validationError = validateImageFile(file);
       if (validationError) {
         toast.error(validationError);
@@ -204,14 +195,10 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
         setIsUploadingImage(true);
         toast.loading("Uploading image...", { id: "upload-image" });
 
-        // Delete old image if it exists and is from Firebase
         if (featuredImage && isFirebaseStorageUrl(featuredImage)) {
-          await deleteImage(featuredImage).catch(() => {
-            // Ignore deletion errors
-          });
+          await deleteImage(featuredImage).catch(() => {});
         }
 
-        // Upload to Firebase Storage
         const downloadURL = await uploadImage(file, "blog-images");
         setFeaturedImage(downloadURL);
 
@@ -234,18 +221,15 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
       "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
     },
     maxFiles: 1,
-    maxSize: 5242880, // 5MB
+    maxSize: 5242880,
   });
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + P for preview toggle
       if ((e.ctrlKey || e.metaKey) && e.key === "p") {
         e.preventDefault();
         setIsPreview((prev) => !prev);
       }
-      // Escape to close modal
       if (e.key === "Escape") {
         onClose();
       }
@@ -259,21 +243,21 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fade-in">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Container */}
       <div
-        className="relative w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col bg-card rounded-2xl shadow-royal-2xl border border-border animate-slide-up bg-white border-royal-300"
+        className="relative w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col bg-white dark:bg-gray-900 rounded-2xl shadow-royal-lg dark:shadow-royal border border-royal-200 dark:border-royal-800 animate-slide-up"
         data-lenis-prevent
       >
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-b border-border">
+          <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-b border-royal-200 dark:border-royal-800">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <h3 className="text-xl sm:text-2xl font-serif font-bold truncate">
+                <h3 className="text-xl sm:text-2xl font-serif font-bold truncate text-royal-900 dark:text-royal-100">
                   {postId ? "Edit Post" : "Create New Post"}
                 </h3>
                 {/* Post Stats */}
@@ -290,8 +274,8 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                   onClick={() => setIsPreview(!isPreview)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
                     isPreview
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted hover:bg-muted/80"
+                      ? "bg-royal-700 dark:bg-royal-600 text-white"
+                      : "bg-royal-100 dark:bg-royal-800/40 hover:bg-royal-200 dark:hover:bg-royal-800/60 text-royal-700 dark:text-royal-300"
                   }`}
                   title="Toggle Preview (Ctrl+P)"
                 >
@@ -310,7 +294,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                 <button
                   type="button"
                   onClick={onClose}
-                  className="text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted p-2"
+                  className="text-royal-400 dark:text-royal-500 hover:text-royal-600 dark:hover:text-royal-300 transition-colors rounded-full hover:bg-royal-100 dark:hover:bg-royal-800/30 p-2"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -439,7 +423,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
               <div className="space-y-4">
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-semibold mb-2">
+                  <label className="block text-sm font-semibold mb-2 text-royal-900 dark:text-royal-100">
                     Featured Image (Optional)
                   </label>
                   <div
@@ -448,21 +432,21 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                       isUploadingImage
                         ? "opacity-50 cursor-not-allowed"
                         : isDragActive
-                        ? "border-primary bg-primary/10"
-                        : "border-border hover:border-primary/50 bg-muted/50"
+                        ? "border-royal-500 dark:border-royal-400 bg-royal-100/50 dark:bg-royal-800/20"
+                        : "border-royal-300 dark:border-royal-700 hover:border-royal-500 dark:hover:border-royal-400 bg-royal-50/50 dark:bg-royal-900/20"
                     }`}
                   >
                     <input {...getInputProps()} disabled={isUploadingImage} />
                     {isUploadingImage ? (
                       <div className="space-y-2">
-                        <div className="animate-spin mx-auto h-10 w-10 border-4 border-primary border-t-transparent rounded-full" />
+                        <div className="animate-spin mx-auto h-10 w-10 border-4 border-royal-500 dark:border-royal-400 border-t-transparent rounded-full" />
                         <p className="text-sm text-muted-foreground">
                           Uploading to Firebase Storage...
                         </p>
                       </div>
                     ) : featuredImage ? (
                       <div className="space-y-3">
-                        <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                        <div className="relative w-full h-48 rounded-lg overflow-hidden bg-royal-100 dark:bg-royal-900">
                           <Image
                             src={featuredImage}
                             alt="Featured"
@@ -492,7 +476,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
 
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-semibold mb-2">
+                  <label className="block text-sm font-semibold mb-2 text-royal-900 dark:text-royal-100">
                     Title *
                   </label>
                   <input
@@ -500,28 +484,28 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all bg-background"
+                    className="w-full px-4 py-3 border-2 border-royal-200 dark:border-royal-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-royal-500 dark:focus:ring-royal-400 focus:border-transparent transition-all bg-white dark:bg-gray-800 text-royal-900 dark:text-royal-100 placeholder:text-royal-400 dark:placeholder:text-royal-500"
                     placeholder="Enter an engaging post title"
                   />
                 </div>
 
                 {/* Excerpt */}
                 <div>
-                  <label className="block text-sm font-semibold mb-2">
+                  <label className="block text-sm font-semibold mb-2 text-royal-900 dark:text-royal-100">
                     Excerpt
                   </label>
                   <textarea
                     value={excerpt}
                     onChange={(e) => setExcerpt(e.target.value)}
                     rows={2}
-                    className="w-full px-4 py-3 border-2 border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all resize-none bg-background"
+                    className="w-full px-4 py-3 border-2 border-royal-200 dark:border-royal-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-royal-500 dark:focus:ring-royal-400 focus:border-transparent transition-all resize-none bg-white dark:bg-gray-800 text-royal-900 dark:text-royal-100 placeholder:text-royal-400 dark:placeholder:text-royal-500"
                     placeholder="Brief description (optional)"
                   />
                 </div>
 
                 {/* Content - Lexical Rich Text Editor */}
                 <div>
-                  <label className="block text-sm font-semibold mb-2">
+                  <label className="block text-sm font-semibold mb-2 text-royal-900 dark:text-royal-100">
                     Content * (Rich Text Editor)
                   </label>
                   <LexicalEditor
@@ -541,7 +525,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
 
                 {/* Categories */}
                 <div>
-                  <label className="block text-sm font-semibold mb-2">
+                  <label className="block text-sm font-semibold mb-2 text-royal-900 dark:text-royal-100">
                     Categories
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -550,10 +534,10 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                         key={category.id}
                         type="button"
                         onClick={() => toggleCategory(category.id)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border-royal-200 border-1 transform hover:scale-105 ${
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border transform hover:scale-105 ${
                           selectedCategories.includes(category.id)
-                            ? "bg-royal-900 text-white shadow-md"
-                            : "bg-gray-300 text-primary-foreground hover:bg-secondary/80"
+                            ? "bg-royal-800 dark:bg-royal-700 text-white border-royal-800 dark:border-royal-700 shadow-md"
+                            : "bg-royal-100 dark:bg-royal-800/40 text-royal-800 dark:text-royal-200 border-royal-200 dark:border-royal-700 hover:bg-royal-200 dark:hover:bg-royal-800/60"
                         }`}
                       >
                         {category.name}
@@ -563,17 +547,17 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                 </div>
 
                 {/* Publish Checkbox */}
-                <div className="flex items-center bg-muted rounded-lg p-3 border border-border">
+                <div className="flex items-center bg-royal-50 dark:bg-royal-900/20 rounded-lg p-3 border border-royal-200 dark:border-royal-800">
                   <input
                     type="checkbox"
                     id="published"
                     checked={published}
                     onChange={(e) => setPublished(e.target.checked)}
-                    className="h-4 w-4 text-primary focus:ring-ring border-input rounded"
+                    className="h-4 w-4 text-royal-700 dark:text-royal-400 focus:ring-royal-500 dark:focus:ring-royal-400 border-royal-300 dark:border-royal-700 rounded"
                   />
                   <label
                     htmlFor="published"
-                    className="ml-2 block text-sm font-medium"
+                    className="ml-2 block text-sm font-medium text-royal-900 dark:text-royal-100"
                   >
                     Publish immediately
                   </label>
@@ -583,18 +567,18 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
           </div>
 
           {/* Footer */}
-          <div className="flex-shrink-0 bg-muted/50 px-4 sm:px-6 py-3 border-t border-border flex flex-col-reverse sm:flex-row sm:justify-end gap-2 rounded-b-2xl">
+          <div className="flex-shrink-0 bg-gradient-to-r from-royal-50 to-brown-50 dark:from-royal-950 dark:to-brown-950 px-4 sm:px-6 py-3 border-t border-royal-200 dark:border-royal-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 rounded-b-2xl">
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border-2 border-border shadow-sm px-4 py-2 bg-background text-sm font-semibold hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all"
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border-2 border-royal-300 dark:border-royal-700 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm font-semibold text-royal-700 dark:text-royal-300 hover:bg-royal-50 dark:hover:bg-royal-800/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-royal-500 dark:focus:ring-royal-400 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={createMutation.isPending || updateMutation.isPending}
-              className="w-full text-white bg-royal-900 sm:w-auto inline-flex justify-center items-center rounded-lg border border-transparent shadow-md px-4 py-2 bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto inline-flex justify-center items-center rounded-lg border border-transparent shadow-md px-4 py-2 bg-royal-800 dark:bg-royal-700 text-sm font-semibold text-white hover:bg-royal-900 dark:hover:bg-royal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-royal-500 dark:focus:ring-royal-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createMutation.isPending || updateMutation.isPending
                 ? "Saving..."

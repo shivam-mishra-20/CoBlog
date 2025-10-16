@@ -24,33 +24,33 @@ export function Pagination({
   showFirstLast = true,
   siblingCount = 1,
 }: PaginationProps) {
-  // Generate page numbers to display
+  // Generate page numbers
   const generatePageNumbers = () => {
     const pages: (number | string)[] = [];
 
-    // Always show first page
+    // First page
     pages.push(1);
 
-    // Calculate range of pages to show around current page
+    // Range around current page
     const leftSibling = Math.max(currentPage - siblingCount, 2);
     const rightSibling = Math.min(currentPage + siblingCount, totalPages - 1);
 
-    // Add ellipsis after first page if needed
+    // Ellipsis after first page
     if (leftSibling > 2) {
       pages.push("...");
     }
 
-    // Add pages around current page
+    // Pages around current
     for (let i = leftSibling; i <= rightSibling; i++) {
       pages.push(i);
     }
 
-    // Add ellipsis before last page if needed
+    // Ellipsis before last page
     if (rightSibling < totalPages - 1) {
       pages.push("...");
     }
 
-    // Always show last page if there's more than one page
+    // Last page
     if (totalPages > 1) {
       pages.push(totalPages);
     }

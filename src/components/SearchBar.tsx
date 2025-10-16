@@ -20,7 +20,6 @@ export function SearchBar({
 }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState(defaultValue);
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       onSearch(searchQuery);
@@ -42,7 +41,7 @@ export function SearchBar({
           placeholder={placeholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-12 pr-10 h-12 text-base shadow-royal"
+          className="pl-12 pr-10 h-12 text-base shadow-royal border-royal-200 dark:border-royal-700 focus:ring-royal-500 dark:focus:ring-royal-400"
         />
         {searchQuery && (
           <Button
@@ -50,7 +49,7 @@ export function SearchBar({
             variant="ghost"
             size="icon"
             onClick={handleClear}
-            className="absolute right-2 h-8 w-8"
+            className="absolute right-2 h-8 w-8 hover:bg-royal-100 dark:hover:bg-royal-800/30"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Clear search</span>

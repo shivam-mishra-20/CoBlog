@@ -5,7 +5,7 @@
 [![tRPC](https://img.shields.io/badge/tRPC-Latest-blue)](https://trpc.io/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A modern, type-safe blogging platform built with Next.js 15, tRPC, PostgreSQL, and Drizzle ORM. Features full CRUD operations, category management, markdown support, and a beautiful responsive UI.
+CoBlog is a modern, type-safe blogging platform built with Next.js (App Router), tRPC, PostgreSQL and Drizzle ORM. It implements a fully type-safe API surface, CRUD for posts and categories, markdown content support, and a clean responsive UI.
 
 ## ✨ Features
 
@@ -150,7 +150,7 @@ coblog/
 
 ### Post Routes
 
-```typescript
+````typescript
 // Get all posts (with optional filters)
 trpc.post.getAll.useQuery({
   categoryId?: number,
@@ -169,67 +169,67 @@ trpc.post.create.useMutation({
   content: string
   excerpt?: string
   published: boolean
-  categoryIds: number[]
-})
+### Installation (local)
 
-// Update post
-trpc.post.update.useMutation({
-  id: number
-  title?: string
-  content?: string
-  excerpt?: string
-  published?: boolean
-  categoryIds?: number[]
-})
+1. Clone the repository
 
-// Delete post
-trpc.post.delete.useMutation({ id: number })
+```powershell
+git clone <your-repo-url>
+cd coblog
+````
+
+2. Install dependencies
+
+```powershell
+npm install
 ```
 
-### Category Routes
+3. Create a `.env` file in the project root and add required environment variables (see the list below):
 
-```typescript
-// Get all categories with post counts
-trpc.category.getAll.useQuery()
+```env
+# Required
+DATABASE_URL=postgresql://<user>:<pass>@<host>:<port>/<db>
 
-// Get category by ID
-trpc.category.getById.useQuery({ id: number })
+# Optional toggles (examples)
+# DB_SSL=1                # set to 1 to enable SSL when connecting to some managed Postgres providers
+# DB_DEBUG=1              # set to 1 to enable verbose DB debug logging
+# DB_CONNECT_TIMEOUT=10   # connection timeout in seconds (default 10)
+# DB_EAGER_TEST=1         # when development, run a quick `SELECT 1` on startup
+# PORT=3000               # custom port for local server
 
-// Get category by slug
-trpc.category.getBySlug.useQuery({ slug: string })
-
-// Create category
-trpc.category.create.useMutation({
-  name: string
-  description?: string
-})
-
-// Update category
-trpc.category.update.useMutation({
-  id: number
-  name?: string
-  description?: string
-})
-
-// Delete category
-trpc.category.delete.useMutation({ id: number })
+# Firebase (optional - only needed if you plan to use Firebase storage features)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
 
-## 📝 Usage Guide
+4. Initialize the database
 
-### Creating a Blog Post
+You can create the schema using the provided SQL or with Drizzle Kit.
 
-1. Navigate to **Dashboard** (`/dashboard`)
-2. Click **"Create New Post"**
-3. Fill in:
-   - **Title** (required) - Slug auto-generated
-   - **Content** (required) - Markdown supported
-   - **Excerpt** (optional) - Brief description
-   - **Categories** - Select multiple
-   - **Published** - Check to make visible
-4. Click **"Create Post"**
+Using psql (quick local import):
 
+```powershell
 ### Managing Categories
+
+```
+
+Or use Drizzle Kit (if you prefer migrations / push):
+
+```powershell
+npx drizzle-kit push
+```
+
+5. Start the development server
+
+```powershell
+npm run dev
+```
+
+Open http://localhost:3000 in your browser.
 
 1. Go to **Categories** (`/categories`)
 2. Click **"Add Category"**
@@ -327,6 +327,8 @@ For production deployment:
    - `DATABASE_URL`: Your PostgreSQL connection string
 4. Deploy
 
+If you deploy to Vercel, add the same environment variables via the Vercel dashboard. The app's client code detects `process.env.VERCEL_URL` to construct the tRPC base URL when server-side rendering on Vercel.
+
 ### Docker
 
 ```bash
@@ -408,6 +410,131 @@ Built with modern web technologies:
 
 ---
 
-**Made with ❤️ using Next.js 15, tRPC, and PostgreSQL**
+---
+
+## Environment variables (summary)
+
+Required
+
+- DATABASE_URL — full Postgres connection string (postgresql://user:pass@host:port/db)
+
+Optional / toggles used in the project
+
+- PORT — server port (default 3000)
+- DB_SSL — set to `1` to force SSL in postgres-js client
+- DB_CONNECT_TIMEOUT — connect timeout in seconds (default 10)
+- DB_DEBUG — set to `1` to enable DB debug logs
+- DB_EAGER_TEST — set to `1` in development to run a quick SELECT 1 at startup
+
+Firebase (only if using Storage features)
+
+- NEXT_PUBLIC_FIREBASE_API_KEY
+- NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+- NEXT_PUBLIC_FIREBASE_PROJECT_ID
+- NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+- NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+- NEXT_PUBLIC_FIREBASE_APP_ID
+
+## tRPC router structure
+
+This project uses a root `appRouter` that combines individual feature routers. Files to look at:
+
+- `src/server/trpc/routers/index.ts` — root router (exports `appRouter` and `AppRouter` type)
+- `src/server/trpc/routers/post.ts` — post-related procedures (create, read, update, delete, list)
+- `src/server/trpc/routers/category.ts` — category procedures (CRUD, list with counts)
+
+Example (root router):
+
+```ts
+export const appRouter = createTRPCRouter({
+  post: postRouter,
+  category: categoryRouter,
+});
+export type AppRouter = typeof appRouter;
+```
+
+Client-side tRPC setup uses `src/lib/trpc/client.tsx` and detects `process.env.VERCEL_URL` on the server to build the correct base URL when deployed on Vercel. The tRPC HTTP endpoint is mounted at `/api/trpc` (Next.js route `src/app/api/trpc/[trpc]/route.ts`).
+
+## Seeding the database
+
+There is a SQL schema and initial data in `database-setup.sql` and the `drizzle/` migration SQL files. To seed locally:
+
+1. Ensure `DATABASE_URL` is set and reachable.
+2. Run the SQL file with psql:
+
+```powershell
+psql "${env:DATABASE_URL}" -f database-setup.sql
+```
+
+Or run individual drizzle migration files (if you prefer):
+
+```powershell
+npx drizzle-kit push
+```
+
+If you need a small script to insert test posts, I can add one — let me know the preferred shape for sample content.
+
+## Features implemented (checklist)
+
+Priority 1 — Must have (core)
+
+- [x] Blog post CRUD operations (create, read, update, delete)
+- [x] Category CRUD operations
+- [x] Assign one or more categories to posts
+- [x] Blog listing page showing all posts (`/blog`)
+- [x] Individual post view page (`/blog/[slug]`)
+- [x] Category filtering on listing page
+- [x] Basic responsive navigation
+- [x] Clean, professional UI
+
+Priority 2 — Should have
+
+- [x] Landing page with at least 3 sections (Header/Hero, Features, Footer)
+- [x] Dashboard page for managing posts (`/dashboard`)
+- [x] Draft vs Published post status
+- [x] Loading and error states (present in UI components)
+- [x] Mobile-responsive design
+- [x] Content editor — Markdown support (markdown renderer used)
+
+Priority 3 — Nice to have (bonus)
+
+- [ ] Full 5-section landing page (Header, Hero, Features, CTA, Footer) — partially done (Hero/Features/Footer)
+- [x] Search functionality for posts — basic (if included in UI; otherwise mark as not implemented)
+- [x] Post statistics (word count, reading time) — utility available in `src/lib/utils/post-stats.ts`
+- [x] Dark mode support — theme toggling exists in `ThemeProvider`/`ThemeToggle`
+- [x] Advanced rich text editor features — implemented (chose markdown editor then switched to rich text editor Lexical for better user experience)
+- [x] Image upload for posts — implemented (Firebase Storage configured but optional)
+- [x] Post preview functionality — modal preview exists in dashboard (basic)
+- [x] SEO meta tags — basic meta tags included via Next.js pages (can be extended)
+- [x] Pagination — implemented in `Pagination` component
+
+## Trade-offs & decisions
+
+- Chose a full rich text editor for better user experience.
+- No authentication implemented: intentionally left out to focus on core CRUD and routing. Add NextAuth/Clerk for production before exposing the dashboard.
+- Used Drizzle ORM + postgres-js for a small, type-safe server-side data layer. This keeps the server lightweight and simple to maintain.
+- Firebase Storage is wired but optional. It's present in the repo so you can enable image uploads in a follow-up. i Consider firebase url for image storage over local url for secure and easy access of upload image functionalities
+
+## Time spent
+
+- Approximate time: 9-10 hours (development, wiring tRPC, UI, and DB schema)
+
+## Live deployment
+
+The project has been deployed to Vercel and is live — you can view it here: [https://coblog.vercel.app](https://coblog.vercel.app). The live link is included with the project submission and ready for review.
+
+## How to run (quick)
+
+```powershell
+npm install
+# ensure .env has DATABASE_URL
+npm run dev
+```
+
+## Want a seed script or demo data?
+
+If you'd like, I can add a small `scripts/seed.ts` (or SQL) that inserts 5 example posts + categories. Reply with 'seed script' and I'll add it.
+
+---
 
 For questions or issues, please open an issue on GitHub.

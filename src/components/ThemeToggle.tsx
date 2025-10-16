@@ -1,15 +1,14 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -22,19 +21,37 @@ export function ThemeToggle() {
     );
   }
 
+  const cycleTheme = () => {
+    if (theme === "system") {
+      setTheme("light");
+    } else if (theme === "light") {
+      setTheme("dark");
+    } else {
+      setTheme("system");
+    }
+  };
+
+  const getIcon = () => {
+    if (theme === "system") {
+      return <Monitor className="h-5 w-5 transition-all" />;
+    }
+    return resolvedTheme === "dark" ? (
+      <Moon className="h-5 w-5 transition-all" />
+    ) : (
+      <Sun className="h-5 w-5 transition-all" />
+    );
+  };
+
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="w-10 h-10"
+      onClick={cycleTheme}
+      className="w-10 h-10 hover:bg-royal-100 dark:hover:bg-royal-800/30"
+      title={`Current: ${theme} | Click to cycle`}
     >
-      {theme === "dark" ? (
-        <Sun className="h-5 w-5 transition-all" />
-      ) : (
-        <Moon className="h-5 w-5 transition-all" />
-      )}
-      <span className="sr-only">Toggle theme</span>
+      {getIcon()}
+      <span className="sr-only">Toggle theme (current: {theme})</span>
     </Button>
   );
 }

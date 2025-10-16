@@ -13,21 +13,20 @@ import { useEffect } from "react";
 import { lexicalTheme } from "./LexicalEditorTheme";
 import { isLexicalJSON, plainTextToLexical } from "@/lib/utils/lexical-utils";
 
-// Plugin to load state in read-only mode
 function ReadOnlyStatePlugin({ state }: { state: string }) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
     if (state) {
       try {
-        // Convert to Lexical JSON if it's plain text
+        // Convert plain text if needed
         const lexicalState = isLexicalJSON(state)
           ? state
           : plainTextToLexical(state);
 
         const parsedState = editor.parseEditorState(lexicalState);
         editor.setEditorState(parsedState);
-        editor.setEditable(false); // Make it read-only
+        editor.setEditable(false);
       } catch (error) {
         console.error("Error loading read-only state:", error);
       }

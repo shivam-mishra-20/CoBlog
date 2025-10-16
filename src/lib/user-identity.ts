@@ -1,13 +1,8 @@
-/**
- * localStorage-based identity system
- * Generates and retrieves a unique user ID for the current browser/device
- */
+/** localStorage-based identity helper */
 
 const USER_ID_KEY = "coblog_user_id";
 
-/**
- * Generates a UUID v4
- */
+/** Generates a UUID v4 */
 function generateUUID(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
@@ -16,26 +11,20 @@ function generateUUID(): string {
   });
 }
 
-/**
- * Gets or creates a unique user ID stored in localStorage
- * @returns {string} The user's unique ID (UUID)
- */
 export function getOrCreateUserId(): string {
-  // Check if we're in a browser environment
   if (typeof window === "undefined" || typeof localStorage === "undefined") {
-    // Server-side: return a placeholder or throw an error
+    // server-side: throw
     throw new Error("getOrCreateUserId can only be called in browser context");
   }
 
   try {
-    // Try to get existing user ID
+  // Try to read existing user ID
     let userId = localStorage.getItem(USER_ID_KEY);
 
-    // If no ID exists, create a new one
+  // Create new ID if missing
     if (!userId) {
       userId = generateUUID();
       localStorage.setItem(USER_ID_KEY, userId);
-      console.log("🆔 New user ID created:", userId);
     }
 
     return userId;

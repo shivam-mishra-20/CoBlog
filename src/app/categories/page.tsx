@@ -83,19 +83,19 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-luxury">
+    <div className="min-h-screen bg-gradient-to-br from-royal-50 via-cream-50 to-brown-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
           <div className="animate-fade-in">
             <div className="flex items-center gap-2 mb-2">
-              <Folder className="h-8 w-8 text-royal-600" />
-              <h1 className="text-5xl font-serif font-bold text-royal-900">
+              <Folder className="h-8 w-8 text-royal-600 dark:text-royal-400" />
+              <h1 className="text-5xl font-serif font-bold text-royal-900 dark:text-royal-100">
                 Categories
               </h1>
             </div>
-            <p className="mt-2 text-lg text-royal-700">
+            <p className="mt-2 text-lg text-royal-700 dark:text-royal-300">
               Organize your blog posts with categories
             </p>
           </div>
@@ -112,15 +112,17 @@ export default function CategoriesPage() {
 
         {isLoading ? (
           <div className="text-center py-20">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-royal-600 border-r-transparent"></div>
-            <p className="mt-6 text-royal-700 text-lg">Loading categories...</p>
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-royal-600 dark:border-royal-400 border-r-transparent"></div>
+            <p className="mt-6 text-royal-700 dark:text-royal-300 text-lg">
+              Loading categories...
+            </p>
           </div>
         ) : categories && categories.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-slide-up">
             {categories.map((category) => (
               <Card
                 key={category.id}
-                className="card-luxury hover:scale-105 transition-all duration-300 hover:shadow-royal-xl"
+                className="border-royal-200 dark:border-royal-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm hover:scale-105 transition-all duration-300 hover:shadow-royal-lg"
               >
                 <CardHeader>
                   <div className="flex justify-between items-start mb-2">
@@ -128,7 +130,9 @@ export default function CategoriesPage() {
                       <CardTitle className="text-2xl mb-2">
                         {category.name}
                       </CardTitle>
-                      <p className="text-sm text-royal-600">/{category.slug}</p>
+                      <p className="text-sm text-royal-600 dark:text-royal-400">
+                        /{category.slug}
+                      </p>
                     </div>
                     <Badge variant="luxury" className="ml-2">
                       {category.postCount} posts
@@ -137,12 +141,12 @@ export default function CategoriesPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {category.description && (
-                    <p className="text-royal-600 line-clamp-2">
+                    <p className="text-royal-600 dark:text-royal-400 line-clamp-2">
                       {category.description}
                     </p>
                   )}
 
-                  <div className="flex gap-2 pt-2 border-t border-royal-200">
+                  <div className="flex gap-2 pt-2 border-t border-royal-200 dark:border-royal-700">
                     <Button
                       onClick={() => handleEdit(category.id)}
                       variant="ghost"

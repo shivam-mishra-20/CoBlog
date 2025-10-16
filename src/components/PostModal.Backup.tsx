@@ -128,13 +128,13 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
         onClick={onClose}
       />
 
-      {/* Modal Container*/}
+      {/* Modal Container */}
       <div
-        className="relative w-full max-w-4xl h-[90vh] sm:h-[85vh] flex flex-col bg-white rounded-2xl shadow-royal-2xl border border-royal-200 animate-slide-up"
+        className="relative w-full max-w-4xl h-[90vh] sm:h-[85vh] flex flex-col bg-white rounded-2xl shadow-royal-lg border border-royal-200 animate-slide-up"
         data-lenis-prevent
       >
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
-          {/* Header*/}
+          {/* Header */}
           <div className="flex-shrink-0 px-4 sm:px-6 py-3 sm:py-4 border-b border-royal-200">
             <div className="flex justify-between items-center">
               <h3 className="text-xl sm:text-2xl font-serif font-bold text-royal-900 truncate">
@@ -150,17 +150,15 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
             </div>
           </div>
 
-          {/* Scrollable Content Area (visible slim scrollbar + wheel/touch pan) */}
+          {/* Scrollable content area */}
           <div
             ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-2 sm:py-3 pr-2 sm:pr-3 modal-scroll [touch-action:pan-y]"
             data-lenis-prevent
             onWheelCapture={(e) => {
               e.stopPropagation();
-              // Force scroll within the modal body even if a global smoother is active
               if (scrollRef.current) {
                 scrollRef.current.scrollTop += e.deltaY;
-                // Only call preventDefault when the event is cancelable (not passive)
                 if (e.cancelable) e.preventDefault();
               }
             }}
@@ -175,7 +173,6 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
                 const dy = prevY - currentY;
                 scrollRef.current.scrollTop += dy;
                 touchYRef.current = currentY;
-                // Only call preventDefault when the event is cancelable (not passive)
                 if (e.cancelable) e.preventDefault();
               }
             }}
@@ -183,7 +180,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
               touchYRef.current = null;
             }}
           >
-            {/* Slim scrollbar styling (Firefox + WebKit) */}
+            {/* Scrollbar styling */}
             <style jsx global>{`
               .modal-scroll {
                 scrollbar-width: thin; /* Firefox */

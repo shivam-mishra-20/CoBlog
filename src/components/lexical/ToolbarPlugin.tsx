@@ -59,12 +59,12 @@ export default function ToolbarPlugin() {
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
     if ($isRangeSelection(selection)) {
-      // Update text format states
+      // Update text format
       setIsBold(selection.hasFormat("bold"));
       setIsItalic(selection.hasFormat("italic"));
       setIsUnderline(selection.hasFormat("underline"));
 
-      // Update block type
+      // Determine block type
       const anchorNode = selection.anchor.getNode();
       const element =
         anchorNode.getKey() === "root"

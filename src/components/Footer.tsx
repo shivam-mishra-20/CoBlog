@@ -18,16 +18,16 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-royal-950 dark:bg-black text-royal-100 border-t border-royal-800">
+    <footer className="bg-royal-950 dark:bg-black text-royal-100 dark:text-royal-200 border-t border-royal-800 dark:border-royal-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main footer content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Brand section */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-serif font-bold bg-gradient-to-r from-royal-300 to-brown-300 bg-clip-text text-transparent">
+            <h3 className="text-2xl font-serif font-bold bg-gradient-to-r from-royal-300 via-royal-200 to-brown-300 bg-clip-text text-transparent">
               CoBlog
             </h3>
-            <p className="text-royal-400 text-sm leading-relaxed">
+            <p className="text-royal-400 dark:text-royal-500 text-sm leading-relaxed">
               A luxurious blogging platform where elegance meets functionality.
               Create, share, and inspire with our premium writing experience.
             </p>
@@ -35,7 +35,7 @@ export default function Footer() {
 
           {/* Navigation links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-royal-200">
+            <h4 className="text-lg font-semibold mb-4 text-royal-200 dark:text-royal-300">
               Quick Links
             </h4>
             <ul className="space-y-2">
@@ -43,7 +43,7 @@ export default function Footer() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="text-royal-400 hover:text-royal-200 transition-colors text-sm"
+                    className="text-royal-400 dark:text-royal-500 hover:text-royal-200 dark:hover:text-royal-300 transition-colors text-sm"
                   >
                     {item.name}
                   </Link>
@@ -54,7 +54,7 @@ export default function Footer() {
 
           {/* Social links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-royal-200">
+            <h4 className="text-lg font-semibold mb-4 text-royal-200 dark:text-royal-300">
               Connect With Us
             </h4>
             <div className="flex space-x-4">
@@ -62,7 +62,7 @@ export default function Footer() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-royal-400 hover:text-royal-200 transition-colors"
+                  className="text-royal-400 dark:text-royal-500 hover:text-royal-200 dark:hover:text-royal-300 transition-colors hover:scale-110 transform duration-200"
                   aria-label={item.name}
                 >
                   <item.icon className="h-6 w-6" />
@@ -73,16 +73,22 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 border-t border-royal-800">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-royal-400">
+        <div className="pt-8 border-t border-royal-800 dark:border-royal-900">
+          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-royal-400 dark:text-royal-500">
             <p>
               &copy; {new Date().getFullYear()} CoBlog. All rights reserved.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="#" className="hover:text-royal-200 transition-colors">
+              <Link
+                href="#"
+                className="hover:text-royal-200 dark:hover:text-royal-300 transition-colors"
+              >
                 Privacy Policy
               </Link>
-              <Link href="#" className="hover:text-royal-200 transition-colors">
+              <Link
+                href="#"
+                className="hover:text-royal-200 dark:hover:text-royal-300 transition-colors"
+              >
                 Terms of Service
               </Link>
             </div>

@@ -64,15 +64,15 @@ module.exports = {
           "linear-gradient(to bottom right, #faf8f5, #f5f0e8, #e8ddd0)",
       },
       boxShadow: {
+    
         royal:
-          "0 4px 6px -1px rgba(139, 111, 79, 0.1), 0 2px 4px -1px rgba(139, 111, 79, 0.06)",
+          "0 2px 4px -1px rgba(139, 111, 79, 0.06), 0 1px 2px -1px rgba(139, 111, 79, 0.04)",
         "royal-lg":
-          "0 10px 15px -3px rgba(139, 111, 79, 0.1), 0 4px 6px -2px rgba(139, 111, 79, 0.05)",
+          "0 6px 10px -3px rgba(139, 111, 79, 0.06), 0 2px 4px -2px rgba(139, 111, 79, 0.03)",
         "royal-xl":
-          "0 20px 25px -5px rgba(139, 111, 79, 0.1), 0 10px 10px -5px rgba(139, 111, 79, 0.04)",
-        "royal-2xl":
-          "0 25px 50px -12px rgba(139, 111, 79, 0.25)",
-        "inner-royal": "inset 0 2px 4px 0 rgba(139, 111, 79, 0.06)",
+          "0 10px 18px -6px rgba(139, 111, 79, 0.06), 0 6px 8px -6px rgba(139, 111, 79, 0.03)",
+        "royal-2xl": "0 12px 30px -10px rgba(139, 111, 79, 0.12)",
+        "inner-royal": "inset 0 1px 2px 0 rgba(139, 111, 79, 0.04)",
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in",

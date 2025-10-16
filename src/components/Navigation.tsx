@@ -26,7 +26,7 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="bg-white/80 backdrop-blur-xl border-b border-royal-200 shadow-royal sticky top-0 z-50">
+    <nav className="bg-white/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-royal-200 dark:border-royal-800 shadow-royal sticky top-0 z-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20">
           <div className="flex items-center">
@@ -40,7 +40,7 @@ export default function Navigation() {
             />
             {/* Site Title */}
             <Link href="/" className="flex items-center space-x-2 group">
-              <span className="md:text-3xl font-serif text-2xl font-bold text-gradient-royal">
+              <span className="md:text-3xl font-serif text-2xl font-bold bg-gradient-to-r from-royal-700 via-royal-600 to-brown-700 dark:from-royal-400 dark:via-royal-300 dark:to-brown-400 bg-clip-text text-transparent">
                 CoBlog
               </span>
             </Link>
@@ -55,16 +55,16 @@ export default function Navigation() {
                 className={cn(
                   "relative px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg group",
                   isActive(link.href)
-                    ? "text-royal-800"
-                    : "text-royal-600 hover:text-royal-800"
+                    ? "text-royal-900 dark:text-royal-100"
+                    : "text-royal-600 dark:text-royal-400 hover:text-royal-900 dark:hover:text-royal-100"
                 )}
               >
                 <span className="relative z-10">{link.label}</span>
                 {isActive(link.href) && (
-                  <span className="absolute inset-0 bg-royal-100 rounded-lg" />
+                  <span className="absolute inset-0 bg-royal-100 dark:bg-royal-800/40 rounded-lg" />
                 )}
                 {!isActive(link.href) && (
-                  <span className="absolute inset-0 bg-royal-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="absolute inset-0 bg-royal-50 dark:bg-royal-800/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
                 )}
               </Link>
             ))}
@@ -76,7 +76,7 @@ export default function Navigation() {
             <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-royal-700 hover:text-royal-900 hover:bg-royal-100 transition-all"
+              className="inline-flex items-center justify-center p-2 rounded-lg text-royal-700 dark:text-royal-300 hover:text-royal-900 dark:hover:text-royal-100 hover:bg-royal-100 dark:hover:bg-royal-800/30 transition-all"
             >
               <span className="sr-only">Open main menu</span>
               {!isMobileMenuOpen ? (
@@ -91,7 +91,7 @@ export default function Navigation() {
 
       {/* Mobile menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-royal-200 animate-slide-down">
+        <div className="md:hidden bg-white dark:bg-gray-950 border-t border-royal-200 dark:border-royal-800 animate-slide-down">
           <div className="px-4 pt-2 pb-3 space-y-1">
             {navLinks.map((link) => (
               <Link
@@ -101,8 +101,8 @@ export default function Navigation() {
                 className={cn(
                   "block px-4 py-3 rounded-lg text-base font-medium transition-all border-l-4",
                   isActive(link.href)
-                    ? "bg-royal-100 border-royal-700 text-royal-900"
-                    : "border-transparent text-royal-700 hover:bg-royal-50 hover:text-royal-900"
+                    ? "bg-royal-100 dark:bg-royal-800/40 border-royal-700 dark:border-royal-400 text-royal-900 dark:text-royal-100"
+                    : "border-transparent text-royal-700 dark:text-royal-400 hover:bg-royal-50 dark:hover:bg-royal-800/20 hover:text-royal-900 dark:hover:text-royal-100"
                 )}
               >
                 {link.label}

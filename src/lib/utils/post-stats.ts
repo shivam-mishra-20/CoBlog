@@ -12,14 +12,14 @@ export interface PostStats {
  * @returns Object containing word count and reading time
  */
 export function calculatePostStats(text: string): PostStats {
-  // Remove markdown syntax for accurate word count
+  // Strip markdown
   const plainText = text
-    .replace(/```[\s\S]*?```/g, "") // Remove code blocks
-    .replace(/`[^`]*`/g, "") // Remove inline code
-    .replace(/#{1,6}\s/g, "") // Remove headers
-    .replace(/[*_~`]/g, "") // Remove markdown formatting
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Replace links with text
-    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "") // Remove images
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`]*`/g, "")
+    .replace(/#{1,6}\s/g, "")
+    .replace(/[*_~`]/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")
     .trim();
 
   const wordCount = plainText.split(/\s+/).filter(Boolean).length;

@@ -15,7 +15,6 @@ import Image from "next/image";
 import { usePostStore } from "@/lib/store/post-store";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-//import Image from "next/image";
 
 export default function DashboardPage() {
   const [userId, setUserId] = useState<string>("");
@@ -34,7 +33,7 @@ export default function DashboardPage() {
     title: string;
   } | null>(null);
 
-  // Get userId only on client side
+  // Get userId on client
   useEffect(() => {
     setUserId(getOrCreateUserId());
   }, []);
@@ -48,7 +47,7 @@ export default function DashboardPage() {
     {
       refetchOnWindowFocus: false,
       refetchOnMount: true,
-      enabled: !!userId, // Only run query when userId is available
+      enabled: !!userId,
     }
   );
 
@@ -57,13 +56,13 @@ export default function DashboardPage() {
   const deleteMutation = trpc.post.delete.useMutation({
     onMutate: async ({ id }) => {
       setDeleting(true);
-      // Cancel outgoing refetches
+      // pause refetch
       await utils.post.getByOwner.cancel();
 
-      // Snapshot previous value
+      // snapshot
       const previousPosts = utils.post.getByOwner.getData({ ownerId: userId });
 
-      // Optimistically update
+      // optimistic update
       utils.post.getByOwner.setData({ ownerId: userId }, (old) =>
         old?.filter((post) => post.id !== id)
       );
@@ -78,7 +77,7 @@ export default function DashboardPage() {
     },
     onError: (err, variables, context) => {
       setDeleting(false);
-      // Rollback on error
+      // rollback on error
       if (context?.previousPosts) {
         utils.post.getByOwner.setData(
           { ownerId: userId },
@@ -90,7 +89,7 @@ export default function DashboardPage() {
       });
     },
     onSettled: () => {
-      // Refetch to ensure sync with server
+      // ensure sync with server
       utils.post.getByOwner.invalidate({ ownerId: userId });
     },
   });
@@ -127,19 +126,22 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-luxury">
+    <div className="min-h-screen bg-gradient-to-br from-royal-50 via-cream-50 to-brown-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
           <div className="animate-fade-in">
-            <h1 className="flex items-center text-5xl font-serif font-bold text-royal-900 gap-3">
-              <LayoutDashboard className="h-10 w-10 text-royal-700" />
+            <h1 className="flex items-center text-5xl font-serif font-bold text-royal-900 dark:text-royal-100 gap-3">
+              <LayoutDashboard className="h-10 w-10 text-royal-700 dark:text-royal-400" />
               <span>
-                My <span className="text-gradient-royal">Dashboard</span>
+                My{" "}
+                <span className="bg-gradient-to-r from-royal-700 via-royal-600 to-brown-700 dark:from-royal-400 dark:via-royal-300 dark:to-brown-400 bg-clip-text text-transparent">
+                  Dashboard
+                </span>
               </span>
             </h1>
-            <p className="mt-2 text-lg text-royal-700">
+            <p className="mt-2 text-lg text-royal-700 dark:text-royal-300">
               Manage your blog posts and content
             </p>
           </div>
@@ -164,10 +166,9 @@ export default function DashboardPage() {
             {posts.map((post) => (
               <Card
                 key={post.id}
-                className="card-luxury hover:scale-105 transition-all duration-300 hover:shadow-royal-xl"
+                className="card-luxury hover:scale-105 transition-all duration-300 hover:shadow-royal-lg"
               >
                 <CardContent className="p-6 space-y-4">
-                  {/* Featured Image */}
                   {post.featuredImage && (
                     <div className="relative w-full h-48 rounded-lg overflow-hidden mb-4">
                       <Image

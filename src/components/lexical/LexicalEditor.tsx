@@ -21,15 +21,13 @@ import type { EditorState } from "lexical";
 import { lexicalTheme } from "./LexicalEditorTheme";
 import ToolbarPlugin from "./ToolbarPlugin";
 
-// Plugin to load initial state ONCE
 function InitialStatePlugin({ initialState }: { initialState?: string }) {
   const [editor] = useLexicalComposerContext();
   const hasLoadedRef = useRef(false);
   const initialStateRef = useRef(initialState);
 
   useEffect(() => {
-    // Only load the initial state once when component mounts
-    // Or when the initialState changes from undefined to defined (for edit mode)
+    // Load initial state once
     if (initialState && !hasLoadedRef.current) {
       try {
         const parsedState = editor.parseEditorState(initialState);
@@ -46,7 +44,7 @@ function InitialStatePlugin({ initialState }: { initialState?: string }) {
 }
 
 interface LexicalEditorProps {
-  value?: string; // JSON string of editor state
+  value?: string;
   onChange?: (editorState: string) => void;
   placeholder?: string;
   className?: string;
@@ -62,7 +60,7 @@ export default function LexicalEditor({
 }: LexicalEditorProps) {
   const changeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initial configuration
+  // Initial config
   const initialConfig = {
     namespace: "CoBlogEditor",
     theme: lexicalTheme,
@@ -80,27 +78,21 @@ export default function LexicalEditor({
     ],
   };
 
-  // Handle editor state changes with debounce
+  // Debounced onChange
   const handleChange = useCallback(
     (editorState: EditorState) => {
       if (onChange) {
         // Clear previous timeout
-        if (changeTimeoutRef.current) {
-          clearTimeout(changeTimeoutRef.current);
-        }
-
-        // Debounce the onChange callback to reduce re-renders
         changeTimeoutRef.current = setTimeout(() => {
           const json = JSON.stringify(editorState.toJSON());
-          // Only call onChange if the content actually changed
           onChange(json);
-        }, 300); // Increased to 300ms for better performance
+        }, 300);
       }
     },
     [onChange]
   );
 
-  // Cleanup timeout on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (changeTimeoutRef.current) {

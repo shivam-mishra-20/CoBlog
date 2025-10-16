@@ -1,7 +1,4 @@
-/**
- * Utility functions for Lexical Editor
- * Handles conversion between Lexical JSON and other formats
- */
+/** Utility functions for Lexical Editor - conversions */
 
 interface LexicalNode {
   type: string;
@@ -9,9 +6,7 @@ interface LexicalNode {
   children?: LexicalNode[];
 }
 
-/**
- * Convert Lexical editor state JSON to plain text
- */
+/** Convert Lexical editor state JSON to plain text */
 export function lexicalToPlainText(jsonString: string): string {
   try {
     const state = JSON.parse(jsonString);
@@ -40,11 +35,9 @@ export function lexicalToPlainText(jsonString: string): string {
   }
 }
 
-/**
- * Convert plain text/markdown to a basic Lexical editor state
- */
+/** Convert plain text/markdown to a basic Lexical editor state */
 export function plainTextToLexical(text: string): string {
-  // Create a basic Lexical editor state with paragraphs
+  // Build basic Lexical state from paragraphs
   const paragraphs = text.split("\n\n").filter((p) => p.trim());
 
   const children = paragraphs.map((paragraph) => ({
@@ -80,9 +73,7 @@ export function plainTextToLexical(text: string): string {
   return JSON.stringify(editorState);
 }
 
-/**
- * Check if a string is valid Lexical JSON
- */
+/** Check if a string is valid Lexical JSON */
 export function isLexicalJSON(value: string): boolean {
   try {
     const parsed = JSON.parse(value);
@@ -97,29 +88,20 @@ export function isLexicalJSON(value: string): boolean {
   }
 }
 
-/**
- * Get word count from Lexical editor state
- */
+/** Get word count from Lexical editor state */
 export function getLexicalWordCount(jsonString: string): number {
   const plainText = lexicalToPlainText(jsonString);
   return plainText.split(/\s+/).filter((word) => word.length > 0).length;
 }
 
-/**
- * Get character count from Lexical editor state
- */
+/** Get character count from Lexical editor state */
 export function getLexicalCharCount(jsonString: string): number {
   const plainText = lexicalToPlainText(jsonString);
   return plainText.length;
 }
 
-/**
- * Export to HTML (requires editor instance)
- * This is a placeholder - actual implementation needs the editor context
- */
+/** Export to HTML (placeholder) */
 export function lexicalToHTML(jsonString: string): string {
-  // This would need to be called within an editor context
-  // For now, return a simple conversion
   try {
     const plainText = lexicalToPlainText(jsonString);
     return `<div>${plainText.split("\n").map((p) => `<p>${p}</p>`).join("")}</div>`;

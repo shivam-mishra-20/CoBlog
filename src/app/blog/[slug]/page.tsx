@@ -41,7 +41,7 @@ export default function BlogPostPage() {
     error,
   } = trpc.post.getBySlug.useQuery({ slug });
 
-  // Calculate post statistics - handle both Lexical JSON and plain text
+  // Post stats (handle Lexical or plain text)
   const stats = post
     ? isLexicalJSON(post.content)
       ? {
@@ -54,12 +54,12 @@ export default function BlogPostPage() {
       : calculatePostStats(post.content)
     : null;
 
-  // Update page metadata
+  // Update metadata
   useEffect(() => {
     if (post) {
       document.title = `${post.title} | CoBlog`;
 
-      // Update meta description
+      // Meta description
       const metaDescription = document.querySelector(
         'meta[name="description"]'
       );
@@ -75,7 +75,7 @@ export default function BlogPostPage() {
         document.head.appendChild(meta);
       }
 
-      // Update Open Graph tags
+      // Open Graph tags
       const updateOrCreateMetaTag = (property: string, content: string) => {
         let meta = document.querySelector(`meta[property="${property}"]`);
         if (meta) {
@@ -199,7 +199,7 @@ export default function BlogPostPage() {
             </Link>
           </Button>
 
-          <Card className="card-luxury overflow-hidden shadow-royal-xl">
+          <Card className="card-luxury overflow-hidden shadow-royal-lg">
             {/* Featured Image */}
             {post.featuredImage && (
               <div className="relative w-full h-64 md:h-96">

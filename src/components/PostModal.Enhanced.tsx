@@ -42,7 +42,6 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
 
   const utils = trpc.useUtils();
 
-  // Calculate post statistics
   const stats = calculatePostStats(content);
 
   const createMutation = trpc.post.create.useMutation({
@@ -136,11 +135,9 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
     );
   };
 
-  // Image upload handler
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
-      // Convert to base64
       const reader = new FileReader();
       reader.onloadend = () => {
         setFeaturedImage(reader.result as string);
@@ -156,18 +153,15 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
       "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
     },
     maxFiles: 1,
-    maxSize: 5242880, // 5MB
+    maxSize: 5242880,
   });
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + P for preview toggle
       if ((e.ctrlKey || e.metaKey) && e.key === "p") {
         e.preventDefault();
         setIsPreview((prev) => !prev);
       }
-      // Escape to close modal
       if (e.key === "Escape") {
         onClose();
       }
@@ -187,7 +181,7 @@ export default function PostModal({ postId, onClose }: PostModalProps) {
 
       {/* Modal Container */}
       <div
-        className="relative w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col bg-card rounded-2xl shadow-royal-2xl border border-border animate-slide-up"
+        className="relative w-full max-w-6xl h-[90vh] sm:h-[85vh] flex flex-col bg-card rounded-2xl shadow-royal-lg border border-border animate-slide-up"
         data-lenis-prevent
       >
         <form onSubmit={handleSubmit} className="flex flex-col h-full">

@@ -48,7 +48,7 @@ export default function BlogPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-luxury">
+    <div className="min-h-screen bg-gradient-to-br from-royal-50 via-cream-50 to-brown-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -57,8 +57,11 @@ export default function BlogPage() {
           <div className="inline-flex items-center justify-center mb-4">
             <BookOpen className="h-10 w-10 text-royal-600 dark:text-royal-400" />
           </div>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold mb-4">
-            Blog <span className="text-gradient-royal">Posts</span>
+          <h1 className="text-5xl md:text-6xl font-serif font-bold mb-4 text-royal-900 dark:text-royal-100">
+            Blog{" "}
+            <span className="bg-gradient-to-r from-royal-700 via-royal-600 to-brown-700 dark:from-royal-400 dark:via-royal-300 dark:to-brown-400 bg-clip-text text-transparent">
+              Posts
+            </span>
           </h1>
           <p className="mt-2 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
             Explore our latest articles, stories, and insights
@@ -132,10 +135,10 @@ export default function BlogPage() {
                     href={`/blog/${post.slug}`}
                     className="group"
                   >
-                    <Card className="h-full hover:scale-105 transition-all duration-300 card-luxury group-hover:shadow-royal-xl overflow-hidden">
+                    <Card className="h-full hover:scale-105 transition-all duration-300 border-royal-200 dark:border-royal-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm group-hover:shadow-royal-lg overflow-hidden">
                       {/* Featured Image */}
                       {post.featuredImage && (
-                        <div className="relative w-full h-48 overflow-hidden">
+                        <div className="relative w-full h-48 overflow-hidden bg-royal-100 dark:bg-royal-900">
                           <Image
                             src={post.featuredImage}
                             alt={post.title}
