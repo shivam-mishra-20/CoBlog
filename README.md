@@ -5,43 +5,132 @@
 [![tRPC](https://img.shields.io/badge/tRPC-Latest-blue)](https://trpc.io/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-CoBlog is a modern, type-safe blogging platform built with Next.js (App Router), tRPC, PostgreSQL and Drizzle ORM. It implements a fully type-safe API surface, CRUD for posts and categories, markdown content support, and a clean responsive UI.
+CoBlog is a modern, type-safe blogging platform built with Next.js 15 (App Router), tRPC, PostgreSQL, and Drizzle ORM. It features a fully type-safe API surface, complete CRUD operations for posts and categories, a rich Lexical text editor, Firebase Storage integration for images, and a clean responsive UI with dark mode support.
+
+## 🌟 Overview
+
+CoBlog is designed to be a lightweight, developer-friendly blogging platform that prioritizes type safety and modern web development practices. The application uses a **localStorage-based user identity system** instead of traditional authentication, making it perfect for personal blogs, portfolios, and small-scale content management systems.
 
 ## ✨ Features
 
 ### Core Features
 
-- ✅ **Complete Blog Post CRUD** - Create, read, update, and delete blog posts
-- ✅ **Category Management** - Organize posts with multiple categories
-- ✅ **Category Filtering** - Filter blog posts by category
-- ✅ **Draft & Publish** - Control post visibility with publish status
-- ✅ **Markdown Support** - Write content in Markdown with live rendering
-- ✅ **SEO-Friendly URLs** - Automatic slug generation from titles
-- ✅ **Responsive Design** - Mobile-first, works on all devices
-- ✅ **Type-Safe API** - End-to-end type safety with tRPC
+- ✅ **Complete Blog Post CRUD** - Create, read, update, and delete blog posts with full validation
+- ✅ **Category Management** - Organize posts with multiple categories (many-to-many relationship)
+- ✅ **Category Filtering** - Filter blog posts by category with dynamic counts
+- ✅ **Draft & Publish** - Control post visibility with publish status toggle
+- ✅ **Rich Text Editor** - Lexical-based WYSIWYG editor with markdown support, code blocks, lists, and links
+- ✅ **SEO-Friendly URLs** - Automatic slug generation from titles with uniqueness validation
+- ✅ **Responsive Design** - Mobile-first design that works seamlessly on all devices
+- ✅ **Type-Safe API** - End-to-end type safety with tRPC and Zod validation
+- ✅ **Image Upload** - Firebase Storage integration for featured images with drag-and-drop
+- ✅ **Dark Mode** - System-aware dark mode with manual toggle
+- ✅ **Search Functionality** - Full-text search across post titles, content, and excerpts
+- ✅ **Pagination** - Efficient pagination for large post collections
+- ✅ **Post Statistics** - Word count and estimated reading time for each post
+- ✅ **Smooth Animations** - Lenis smooth scroll for enhanced user experience
 
 ### UI Pages
 
-- 🏠 **Landing Page** - Hero, features showcase, and footer
-- 📝 **Blog Listing** - Grid view with category filters
-- 📖 **Post Detail** - Full post view with markdown rendering
-- 🎛️ **Dashboard** - Admin interface for managing posts
-- 🏷️ **Categories** - Manage and organize categories
+- 🏠 **Landing Page** - Hero section, features showcase, latest posts, and footer
+- 📝 **Blog Listing** - Grid view with category filters, search, and pagination
+- 📖 **Post Detail** - Full post view with rich text rendering and related categories
+- 🎛️ **Dashboard** - Admin interface for managing posts with draft/published status
+- 🏷️ **Categories** - Manage and organize categories with post counts
+
+## 🔐 User Identity System
+
+CoBlog uses a **localStorage-based identity system** instead of traditional authentication. This approach provides several benefits for personal blogging platforms:
+
+### How It Works
+
+1. **UUID Generation**: When a user first visits the site, a unique UUID v4 is generated and stored in `localStorage` under the key `coblog_user_id`.
+
+2. **Persistent Identity**: This ID persists across browser sessions and is used to associate posts with their creators.
+
+3. **Post Ownership**: Each post stores the creator's `ownerId` (UUID) in the database, allowing users to edit/delete only their own posts.
+
+4. **No Authentication Required**: No signup, login, or password management needed - perfect for single-user or trusted-user scenarios.
+
+### Implementation Details
+
+```typescript
+// src/lib/user-identity.ts
+export function getOrCreateUserId(): string {
+  let userId = localStorage.getItem("coblog_user_id");
+
+  if (!userId) {
+    userId = generateUUID(); // UUID v4 generator
+    localStorage.setItem("coblog_user_id", userId);
+  }
+
+  return userId;
+}
+```
+
+### Post Creation Flow
+
+1. User opens the post creation modal in the dashboard
+2. `getOrCreateUserId()` is called to retrieve or generate the user's UUID
+3. Post is created with the `ownerId` field set to this UUID
+4. tRPC validates the UUID format using Zod schema
+5. Post is saved to the database with ownership information
+
+### Security Considerations
+
+⚠️ **Important Limitations:**
+
+- **Not Suitable for Multi-User Production**: Anyone with access to the browser can create/edit posts
+- **No Password Protection**: The UUID can be viewed in localStorage
+- **Browser-Specific**: Clearing localStorage or using a different browser creates a new identity
+- **No Recovery Mechanism**: Lost UUID means lost access to posts
+
+### When to Use This Approach
+
+✅ **Good For:**
+
+- Personal blogs (single author)
+- Portfolio websites
+- Internal company blogs (trusted network)
+- Development and testing
+- Proof of concept projects
+
+❌ **Not Recommended For:**
+
+- Public multi-author platforms
+- Commercial applications
+- Sites requiring user privacy
+- Applications with sensitive content
 
 ## 🛠️ Tech Stack
 
-| Layer                | Technology                   |
-| -------------------- | ---------------------------- |
-| **Framework**        | Next.js 15 (App Router)      |
-| **Language**         | TypeScript                   |
-| **Database**         | PostgreSQL                   |
-| **ORM**              | Drizzle ORM                  |
-| **API**              | tRPC (type-safe RPC)         |
-| **Validation**       | Zod                          |
-| **Data Fetching**    | TanStack Query (React Query) |
-| **State Management** | Zustand                      |
-| **Styling**          | Tailwind CSS                 |
-| **Content**          | Markdown (react-markdown)    |
+| Layer                | Technology                        |
+| -------------------- | --------------------------------- |
+| **Framework**        | Next.js 15.5 (App Router)         |
+| **Language**         | TypeScript 5.0                    |
+| **Database**         | PostgreSQL                        |
+| **ORM**              | Drizzle ORM 0.44.6                |
+| **API**              | tRPC 11.0 (type-safe RPC)         |
+| **Validation**       | Zod                               |
+| **Data Fetching**    | TanStack Query 5.90 (React Query) |
+| **State Management** | Zustand                           |
+| **Styling**          | Tailwind CSS                      |
+| **Rich Text Editor** | Lexical 0.37 (Facebook's editor)  |
+| **File Storage**     | Firebase Storage 12.4             |
+| **Animations**       | Lenis 1.3 (smooth scroll)         |
+| **UI Components**    | shadcn/ui + Radix UI primitives   |
+| **Icons**            | Lucide React 0.545                |
+| **Theme**            | next-themes 0.4 (dark mode)       |
+| **Deployment**       | Vercel                            |
+
+### Why These Technologies?
+
+- **Next.js 15**: Latest App Router with server components and streaming SSR
+- **tRPC**: Type-safe API without code generation, perfect for full-stack TypeScript
+- **Drizzle ORM**: Lightweight, type-safe ORM with excellent TypeScript support
+- **Lexical**: Modern, extensible rich text editor from Facebook (Meta)
+- **Zustand**: Minimal state management with hooks API
+- **Zod**: Runtime type validation that integrates seamlessly with tRPC
 
 ## 🚀 Quick Start
 
@@ -282,14 +371,50 @@ npm start            # Start production server
 npm run db:generate  # Generate migrations
 npm run db:push      # Push schema to database
 npm run db:studio    # Open Drizzle Studio
+npm run db:health    # Check database connection
+
+# Seeding
+npm run seed         # Generate 12 professional blog posts with diverse content
 
 # Code Quality
 npm run lint         # Run ESLint
 ```
 
+### Seed Script
+
+The project includes a professional blog post generator that creates 10-12 high-quality blog posts across various topics:
+
+```bash
+npm run seed
+```
+
+**Features:**
+
+- **Diverse Topics**: Technology, AI/ML, Web Development, DevOps, Business, Career, etc.
+- **Professional Writing**: Well-structured content with proper formatting
+- **Rich Content**: Includes code blocks, lists, headings, and proper markdown
+- **Realistic Metadata**: Appropriate excerpts, reading times, and categories
+- **Featured Images**: Placeholder images from Unsplash API
+- **SEO-Friendly**: Proper slugs, descriptions, and content structure
+
+The seed script automatically:
+
+1. Connects to your database using `DATABASE_URL`
+2. Creates necessary categories if they don't exist
+3. Generates unique, professional blog posts
+4. Associates posts with relevant categories
+5. Sets appropriate publish status
+
+Perfect for:
+
+- Testing the application with realistic data
+- Demonstrating the platform to stakeholders
+- Development and UI testing
+- Portfolio showcases
+
 ## 🔒 Security Notes
 
-**⚠️ Important**: This application **does not include authentication**.
+**⚠️ Important**: This application **does not include traditional authentication**.
 
 For production deployment:
 
@@ -316,6 +441,234 @@ For production deployment:
    - Enable SSL for database connections
    - Regular backups
    - Apply least privilege principle
+
+## 🚀 Potential Improvements
+
+This section outlines suggested enhancements to make CoBlog production-ready and feature-rich:
+
+### 🔐 Authentication & Authorization
+
+1. **Full Authentication System**
+
+   - Replace localStorage UUID with NextAuth.js, Clerk, or Supabase Auth
+   - Implement OAuth providers (Google, GitHub, Twitter)
+   - Add password reset and email verification
+   - Session management with JWT or database sessions
+
+2. **Role-Based Access Control (RBAC)**
+
+   - Admin, Editor, Author, and Reader roles
+   - Permission-based post editing and deletion
+   - Multi-author blog support with user profiles
+   - Audit logs for admin actions
+
+3. **Protected Routes**
+   - Middleware to protect dashboard and admin routes
+   - Public API endpoints with rate limiting
+   - API key authentication for programmatic access
+
+### 📝 Content Management
+
+4. **Enhanced Editor Features**
+
+   - Auto-save drafts to prevent data loss
+   - Version history and post revisions
+   - Collaborative editing with real-time updates
+   - Custom blocks (callouts, quotes, embeds)
+   - Table support in Lexical editor
+   - LaTeX/Math equation support
+
+5. **Media Management**
+
+   - Media library for managing uploaded images
+   - Image optimization and compression
+   - CDN integration for faster delivery
+   - Support for videos, PDFs, and other file types
+   - Image gallery/carousel blocks
+
+6. **SEO & Metadata**
+   - Custom meta descriptions and OG tags per post
+   - Sitemap generation (dynamic XML sitemap)
+   - RSS feed for blog posts
+   - Schema.org structured data
+   - Canonical URLs and redirects
+
+### 🎨 UI/UX Enhancements
+
+7. **Reader Experience**
+
+   - Table of contents generation from headings
+   - Progress bar for reading articles
+   - Social sharing buttons (Twitter, LinkedIn, Facebook)
+   - Print-friendly styles
+   - Font size and theme customization
+   - Bookmark/save posts feature
+
+8. **Advanced Search**
+
+   - Full-text search with Algolia or ElasticSearch
+   - Search autocomplete and suggestions
+   - Filter by date range, author, tags
+   - Saved searches
+
+9. **Engagement Features**
+   - Comments system (native or Disqus/Giscus)
+   - Reactions/likes on posts
+   - Related posts recommendations
+   - Newsletter subscription (via ConvertKit/Mailchimp)
+   - "Share this post" functionality
+
+### 📊 Analytics & Insights
+
+10. **Analytics Dashboard**
+
+    - Page views and unique visitors (via Plausible/Google Analytics)
+    - Popular posts and trending categories
+    - User engagement metrics
+    - Referral sources and traffic analysis
+    - Export analytics data as CSV/JSON
+
+11. **Author Insights**
+    - Post performance dashboard per author
+    - Engagement rate calculations
+    - Top-performing content analysis
+
+### ⚡ Performance & Scalability
+
+12. **Caching Strategy**
+
+    - Redis for session and query caching
+    - CDN caching for static assets
+    - ISR (Incremental Static Regeneration) for blog posts
+    - Database query optimization with indexes
+
+13. **Image Optimization**
+
+    - Next.js Image component with automatic optimization
+    - WebP/AVIF format conversion
+    - Lazy loading and blur placeholders
+    - Responsive images for different screen sizes
+
+14. **Database Optimization**
+    - Full-text search indexes on posts
+    - Query result caching
+    - Connection pooling (PgBouncer)
+    - Database replication for read-heavy workloads
+
+### 🏷️ Content Organization
+
+15. **Tags System**
+
+    - Add tags in addition to categories
+    - Tag cloud visualization
+    - Tag-based filtering and search
+
+16. **Series/Collections**
+
+    - Group related posts into series
+    - Auto-generated "Next/Previous in series" navigation
+    - Series landing pages
+
+17. **Multilingual Support**
+    - i18n for UI translations
+    - Multi-language post content
+    - Language switcher component
+
+### 🔔 Notifications & Workflows
+
+18. **Email Notifications**
+
+    - New post notifications to subscribers
+    - Comment reply notifications
+    - Weekly digest emails
+    - Email templates with React Email
+
+19. **Scheduled Publishing**
+
+    - Schedule posts to publish at specific times
+    - Timezone-aware scheduling
+    - Draft reminders and publication queue
+
+20. **Content Workflow**
+    - Post status: Draft → Review → Scheduled → Published
+    - Review and approval system
+    - Editorial calendar view
+
+### 🧪 Testing & Quality
+
+21. **Testing Infrastructure**
+
+    - Unit tests with Vitest
+    - Integration tests for tRPC routes
+    - E2E tests with Playwright
+    - Visual regression testing
+
+22. **Code Quality**
+    - Husky for pre-commit hooks
+    - Prettier for consistent formatting
+    - Strict TypeScript configuration
+    - ESLint rules for best practices
+
+### 🔧 Developer Experience
+
+23. **Admin Features**
+
+    - Bulk operations (delete, publish, categorize)
+    - Import/export posts (JSON, Markdown)
+    - Database backup and restore UI
+    - System health monitoring
+
+24. **API Enhancements**
+    - REST API alongside tRPC for third-party integrations
+    - Webhooks for post events
+    - GraphQL endpoint (optional)
+    - API documentation with OpenAPI/Swagger
+
+### 🌐 Additional Features
+
+25. **Progressive Web App (PWA)**
+
+    - Offline reading capability
+    - Install as mobile app
+    - Push notifications for new posts
+
+26. **Accessibility**
+
+    - WCAG 2.1 AA compliance
+    - Keyboard navigation improvements
+    - Screen reader optimization
+    - Focus management
+
+27. **Monetization**
+    - Ad integration (Google AdSense)
+    - Paywall for premium content
+    - Membership/subscription system
+    - Donation/tip jar integration
+
+### Implementation Priority
+
+**High Priority** (Production-Ready):
+
+- Authentication & Authorization (#1, #2, #3)
+- SEO & Metadata (#6)
+- Analytics Dashboard (#10)
+- Caching Strategy (#12)
+- Testing Infrastructure (#21)
+
+**Medium Priority** (Enhanced Features):
+
+- Enhanced Editor (#4)
+- Media Management (#5)
+- Reader Experience (#7)
+- Tags System (#15)
+- Email Notifications (#18)
+
+**Low Priority** (Nice-to-Have):
+
+- Advanced Search (#8)
+- Multilingual Support (#17)
+- PWA (#25)
+- Monetization (#27)
 
 ## 🚀 Deployment
 
@@ -498,7 +851,7 @@ Priority 2 — Should have
 
 Priority 3 — Nice to have (bonus)
 
-- [ ] Full 5-section landing page (Header, Hero, Features, CTA, Footer) — partially done (Hero/Features/Footer)
+- [x] Full 5-section landing page (Header, Hero, Features, CTA, Footer)
 - [x] Search functionality for posts — basic (if included in UI; otherwise mark as not implemented)
 - [x] Post statistics (word count, reading time) — utility available in `src/lib/utils/post-stats.ts`
 - [x] Dark mode support — theme toggling exists in `ThemeProvider`/`ThemeToggle`
