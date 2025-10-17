@@ -16,4 +16,4 @@ const createContext = cache(async () => {
   });
 });
 
-export const api = appRouter.createCaller(await createContext());
+export const api = async () => appRouter.createCaller(await createContext());
